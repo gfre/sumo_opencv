@@ -1,5 +1,6 @@
 /*
 Author: Nico Engel
+
 */
 
 
@@ -24,303 +25,21 @@ Author: Nico Engel
 #include <math.h>
 #include <ctime>
 
+/* PROJECT INCLUDES */
+#include "config.h"
+#include "aruco_func.h"
+#include "serial.h"
+#include "reconstruct3d.h"
+#include "stitcher.h"
+
 /* NAMESPACES */
 using namespace std;
 using namespace cv;
 
-/* SETUP */
-#define M_PI					(3.14159265358979323846)					//Pi
-
-#define SERIAL_TRANSMIT			(0)											//Enable/Disable Serial Transmission
-#define RECALCULATE_HOMOGRAPHY	(0)											//Set to 1 if camera settings/position changed or Homography Matrix needs to be calculated again
-
-#define NATIVE_WIDTH			(640)										//Do not change
-#define NATIVE_HEIGHT			(360)										//Do not change
-#define RES_SCALING_FACTOR		(3)											/*Set Video resolution
-1 for 640x360
-2 for 1280x720
-3 for 1920x1080 */
-#define MARKER_LENGTH			(100)										//Marker length in mm
-#define MAX_NUMBER_OF_MARKERS	(4)											//How many markers/robots exist
-#define NUM_OF_VARIABLES		(3)											//How many variables per robot (x, y, phi)
-#define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
-#define ORIGIN_MARKER_ID		(24)										//Select which marker acts as the origin of world coordinate system
-#define MIN_HESSIAN				(500)										//Minimum Hessian threshold for Surf Algorithm
-#define Z_CONST					(3050+940)										//Distance from Camera to Marker Plane in mm
-
-#define HOMOGRAPHY_M			0.9568005531058007, 0.001879261708537507, 488.6830366627206, -0.02376243394348695, 0.9520233532133866, 17.3904366427672, -5.302341910721238e-06, -2.612583953997515e-05, 1
-
-#define ERR_OK					(1)							
-#define VAR_INVALID				(0xFFEEu)									//Send this instead of coordinates if marker was not detected
-
-
-
-
-//Function to draw Aruco marker with id, size in pixel, borderBits (must be greater or equal 1), and filename
-void drawArucoMarker(int id, int size, int borderBits, string ofileName) {
-	/* Draw Aruco Marker
-	*/
-	Mat markerImage;
-
-	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_6X6_250);
-	aruco::drawMarker(dictionary, id, size, markerImage, borderBits);
-
-	//namedWindow("Aruco Marker", WINDOW_AUTOSIZE);
-	//imshow("Aruco Marker", markerImage);
-	imwrite(ofileName, markerImage);
-	//waitKey(0);
-	cout << ofileName << " Marker succesfully created" << endl;
-}
-
-//Function to read Camera Parameters from file
-static bool readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs) {
-	FileStorage fs(filename, FileStorage::READ);
-	if (!fs.isOpened())
-		return false;
-	fs["camera_matrix"] >> camMatrix;
-	fs["distortion_coefficients"] >> distCoeffs;
-	return true;
-}
-
-//Get World Coordinates (X,Y,Z) from Image Coordinates (u,v,1)
-int getWorldCoordinates(Point2f uv, Mat *xyz, Mat invCamMatrix, Mat invRotMatrix, Vec3d tvec, double zConst) {
-
-	double s;
-	Mat uvPoint, t, tmp, tmp2;
-
-	uvPoint = Mat::ones(3, 1, DataType<double>::type);
-	uvPoint.at<double>(0, 0) = uv.x;
-	uvPoint.at<double>(1, 0) = uv.y;
-
-	//Copy translation vector tvec to Mat object t
-	t = Mat::ones(3, 1, DataType<double>::type);
-	t.at<double>(0, 0) = tvec[0];
-	t.at<double>(1, 0) = tvec[1];
-	t.at<double>(2, 0) = tvec[2];
-
-	tmp = invRotMatrix * invCamMatrix * uvPoint;
-	s = (zConst - t.at<double>(2, 0)) / tmp.at<double>(2, 0);
-	*xyz = t + s * tmp;
-
-	/*
-	//calculate temp values to solve eq for scaling factor s
-	tmp = invRotMatrix * invCamMatrix * uvPoint;
-	tmp2 = invRotMatrix * t;
-
-	s = (zConst + tmp2.at<double>(2, 0)) / tmp.at<double>(2, 0);
-
-	*xyz = invRotMatrix * (s * invCamMatrix * uvPoint - t);
-	*/
-	return ERR_OK;
-
-}
-
-//Send data via serial communication port
-int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byteSize) {
-	/*
-	https://msdn.microsoft.com/en-us/library/ff802693.aspx
-	http://www.dreamincode.net/forums/topic/322031-serial-communication-with-c-programming/
-	*/
-
-	/*Serial Setup*/
-	HANDLE hComm;
-	BOOL hStatus;
-	DCB dcb = { 0 };
-	COMMTIMEOUTS timeouts = { 0 };
-	DWORD dwBytesWrite = 0;
-
-	/*Timeouts*/
-	timeouts.ReadIntervalTimeout = 50;
-	timeouts.ReadTotalTimeoutConstant = 50;
-	timeouts.ReadTotalTimeoutMultiplier = 10;
-	timeouts.WriteTotalTimeoutConstant = 50;
-	timeouts.WriteTotalTimeoutMultiplier = 10;
-
-	/*Open Comm Port
-	https://msdn.microsoft.com/en-us/library/windows/desktop/aa363858(v=vs.85).aspx
-	HANDLE WINAPI CreateFile(
-	_In_     LPCTSTR               lpFileName,
-	_In_     DWORD                 dwDesiredAccess,
-	_In_     DWORD                 dwShareMode,
-	_In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-	_In_     DWORD                 dwCreationDisposition,
-	_In_     DWORD                 dwFlagsAndAttributes,
-	_In_opt_ HANDLE                hTemplateFile
-	);
-
-	*/
-	hComm = CreateFileA(serialPort,
-		GENERIC_READ | GENERIC_WRITE,
-		0,								//Must be zero
-		0,
-		OPEN_EXISTING,					//Must specify the OPEN_EXISTING flag
-		FILE_ATTRIBUTE_NORMAL,
-		NULL);							//Must be NULL
-
-
-										/*Setup Com Port*/
-	if (hComm == INVALID_HANDLE_VALUE) {
-		cout << "Error opening port." << endl << "Failed with error: " << GetLastError() << endl;
-		return 1;
-	}
-
-	if (!SetCommTimeouts(hComm, &timeouts)) {
-		cout << "Failed with error: " << GetLastError() << endl;
-		return 2;
-	}
-
-	hStatus = GetCommState(hComm, &dcb);
-
-	if (!hStatus) {
-		cout << "GetCommState failed with error: " << GetLastError() << endl;
-		return 3;
-	}
-
-	//Setup Serial Connection
-	dcb.BaudRate = CBR_57600;
-	dcb.ByteSize = 8;
-	dcb.Parity = NOPARITY;
-	dcb.StopBits = ONESTOPBIT;
-
-	hStatus = SetCommState(hComm, &dcb);
-
-	if (!hStatus) {
-		cout << "SetCommState failed with error: " << GetLastError() << endl;
-		return 4;
-	}
-	else {
-		//cout << "Serial Port " << serialPort << " successfully configured" << endl;
-	}
-
-
-	//Write to serial port
-	if (sizeof(sendBuf) > maxBufSize) {
-		cout << "Message is too long." << endl;
-		return 5;
-	}
-
-	if (WriteFile(hComm, sendBuf, byteSize, &dwBytesWrite, NULL)) {
-		//cout << "Message: \"" << sendBuf << "\" successfully transmitted" << endl;
-	}
-	//Uncomment to Read Data from Serial Port
-	/*
-	int16_t szBuf[] = { 0 };
-	DWORD dwBytesRead = 0;
-	ReadFile(hComm, szBuf, sizeof(szBuf) - 1, &dwBytesRead, NULL);
-	*/
-
-
-	CloseHandle(hComm);
-	return 0;
-
-
-}
-
-//Calculate Homography Matrix for image stitching
-int getHomographyMatrix(Mat image1, Mat image2, Mat *H, int minHessian, double minDist = 100.0, bool drawGoodMatches = false)
-{
-	// TODO : Write Description for getHomographyMatrix
-
-	//Init
-	Mat descriptor1, descriptor2, gray1, gray2;
-	vector<KeyPoint> keypoint1, keypoint2;
-	vector<DMatch> matches, goodMatches;
-	vector<Point2f> points1, points2;
-	double maxDist = 0;
-
-	//rotate images, so they can be stitched together properly
-	flip(image1.t(), image1, 1);
-	flip(image2.t(), image2, 0);
-
-	//Convert to grayscale for feature detection
-	cvtColor(image1, gray1, CV_BGR2GRAY);
-	cvtColor(image2, gray2, CV_BGR2GRAY);
-
-	//initialize SURF Detector
-	Ptr<xfeatures2d::SURF> detector = xfeatures2d::SURF::create(minHessian);
-
-	// --> Step 1: Detect the keypoints using SURF Detector
-	detector->detect(gray1, keypoint1);
-	detector->detect(gray2, keypoint2);
-
-	// --> Step 2: Calculate descriptors (feature vectors)
-	detector->compute(gray1, keypoint1, descriptor1);
-	detector->compute(gray2, keypoint2, descriptor2);
-
-	// --> Step 3: Matching descriptor vectors using FLANN matcher
-	FlannBasedMatcher matcher;
-	matcher.match(descriptor1, descriptor2, matches);
-
-
-	//--> Quick calculation of max and min distances between keypoints
-	for (int i = 0; i < descriptor1.rows; i++)
-	{
-		double dist = matches[i].distance;
-		if (dist < minDist)
-			minDist = dist;
-		if (dist > maxDist)
-			maxDist = dist;
-	}
-
-	//--> Use only "good" matches, whose distance is less than minDist
-	for (int i = 0; i < descriptor1.rows; i++)
-	{
-		if (matches[i].distance <= 3 * minDist)
-		{
-			goodMatches.push_back(matches[i]);
-		}
-	}
-
-	// --> Only show good Matches if drawGodMatches == true
-	if (drawGoodMatches)
-	{
-		Mat imgMatches;
-		drawMatches(image1, keypoint1, image2, keypoint2, goodMatches, imgMatches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-		imshow("Good matches", imgMatches);
-
-	}
-
-	//--> Get the keypoints from goodMatches
-	for (int i = 0; i < goodMatches.size(); i++)
-	{
-		points1.push_back(keypoint1[goodMatches[i].queryIdx].pt);
-		points2.push_back(keypoint2[goodMatches[i].trainIdx].pt);
-	}
-
-	*H = findHomography(points2, points1, CV_RANSAC);
-
-	return ERR_OK;
-
-}
-
-//Image Stitcher
-int stitcher(Mat image1, Mat image2, Mat *stitchedImage, Mat H)
-{
-	// TODO : Write Description for stitcher
-
-	//flip images for proper stitching
-	flip(image1.t(), image1, 1);
-	flip(image2.t(), image2, 0);
-
-	Mat warped;
-	Mat final(Size(image1.cols + image2.cols, image1.rows), CV_8UC3);
-
-	warpPerspective(image2, warped, H, Size(image1.cols + image2.cols, image2.rows));
-
-	Mat roi1(final, Rect(0, 0, image1.cols, image1.rows));
-	Mat roi2(final, Rect(0, 0, warped.cols, warped.rows));
-
-	warped.copyTo(roi2);
-	image1.copyTo(roi1);
-
-	*stitchedImage = final;
-	return ERR_OK;
-}
 
 int main(int argc, char *argv[]) {
-
-	//Uncomment to save aruco markers
-	/*
+	
+#if GENERATE_ARUCO_CODES
 	for (int i = 0; i <= 25; i++) {
 
 	string fileName, fileFormat, file;
@@ -334,27 +53,15 @@ int main(int argc, char *argv[]) {
 	drawArucoMarker(i, sizeInPixel, borderBits, file);
 
 	}
-	*/
+#endif
 
-	//Select Camera Parameter configuration file according to Scaling Factor
-	string config_file;// = "calibration_door.xml";
-
-	switch (RES_SCALING_FACTOR)
-	{
-	case 1: config_file = "camera_distortion_parameters.xml";
-		break;
-	case 2: config_file = "camera_distortion_parameters_720.xml";
-		break;
-	case 3: config_file = "camera_distortion_parameters_1080.xml";
-		break;
-	default:
-		break;
-	}
+	//Camera Parameter xml configuration file
+	string configFile = "CALIB_FILE_NAME";
 
 
 	// Open Camera Parameter File
 	Mat camMatrix, invCamMatrix, distCoeffs;
-	bool readOK = readCameraParameters(config_file, camMatrix, distCoeffs);
+	bool readOK = readCameraParameters(configFile, camMatrix, distCoeffs);
 	if (!readOK) {
 		cerr << "Invalid camera file" << endl;
 		return -1;
@@ -372,29 +79,26 @@ int main(int argc, char *argv[]) {
 	inputVideo2.open(1);
 
 	//Set Resolution
-	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, NATIVE_HEIGHT*RES_SCALING_FACTOR);
-	inputVideo1.set(CAP_PROP_FRAME_WIDTH, NATIVE_WIDTH*RES_SCALING_FACTOR);
+	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
-	inputVideo2.set(CAP_PROP_FRAME_HEIGHT, NATIVE_HEIGHT*RES_SCALING_FACTOR);
-	inputVideo2.set(CAP_PROP_FRAME_WIDTH, NATIVE_WIDTH*RES_SCALING_FACTOR);
+	inputVideo2.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	inputVideo2.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
 	//initialize Mat objects
 	Mat image1, image2, stitchedImage, imageDetected, rotMatrix, invRotMatrix, H;
-	inputVideo1.retrieve(image1);
-	inputVideo2.retrieve(image2);
 
-	//
-	if (RECALCULATE_HOMOGRAPHY)
-	{
+
+#if RECALCULATE_HOMOGRAPHY
+		inputVideo1.retrieve(image1);
+		inputVideo2.retrieve(image2);
 		getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, false);
 		// Print new Homography Matrix for saving
 		//cout << H;
-	}
-	else
-	{
+#else
 		// Use "old" Homography Matrix
 		H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
-	}
+#endif
 
 	//Grab frames continuously
 	while (inputVideo1.grab() && inputVideo2.grab()) {
@@ -402,11 +106,17 @@ int main(int argc, char *argv[]) {
 		inputVideo1.retrieve(image1);
 		inputVideo2.retrieve(image2);
 
-		//stitcher(image1, image2, &stitchedImage, H);
-
+#if USE_STITCHER
+		stitcher(image1, image2, &stitchedImage, H);
+		stitchedImage.copyTo(imageDetected);
+#else
 		image1.copyTo(imageDetected);
-
-		//undistort(image1, imageDetected, camMatrix, distCoeffs);
+#endif
+		
+#if UNDISTORT_IMAGE
+		Mat imageUndistorted;
+		undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
+#endif
 
 		vector<int> markerIds;
 		vector<vector<Point2f>> markerCorners;
@@ -426,8 +136,7 @@ int main(int argc, char *argv[]) {
 			// TODO : Improve Corner detection
 			// http://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghlinesp#cornersubpix
 			// http://docs.opencv.org/3.1.0/d5/dae/tutorial_aruco_detection.html
-
-
+			
 
 			//Check if the Origin Marker was detected
 			int isOriginVisible = 0;
@@ -451,13 +160,15 @@ int main(int argc, char *argv[]) {
 					//Invert Rotation Matrix once to reduce computational load
 					invRotMatrix = rotMatrix.inv();
 
-					//uvOrigin.x = markerCorners[i][0].x;
-					//uvOrigin.y = markerCorners[i][0].y;
-
+#if SHIFT_POINT_TO_CENTER
 					//Calculate Center of Origin using moments
 					Moments mu = moments(markerCorners[i]);
 					uvOrigin = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
-					circle(imageDetected, uvOrigin, 5, Scalar(0, 0, 255));
+#else
+					//Use top left corner
+					uvOrigin.x = markerCorners[i][0].x;
+					uvOrigin.y = markerCorners[i][0].y;
+#endif
 
 					getWorldCoordinates(uvOrigin, &xyzOrigin, invCamMatrix, invRotMatrix, coordOrigin, 3050.0);
 				}
@@ -485,19 +196,23 @@ int main(int argc, char *argv[]) {
 						//Invert Rotation Matrix once to reduce computational load
 						invRotMatrix = rotMatrix.inv();
 
-						circle(imageDetected, Point2f(640, 360), 5, Scalar(0, 0, 255));
+						circle(imageDetected, Point2f(FRAME_WIDTH/2, FRAME_HEIGHT/2), 5, Scalar(0, 0, 255));
 
 						Mat xyzPoint = Mat::ones(3, 1, DataType<double>::type), relXYZPoint, xyzBottomLeft = Mat::ones(3, 1, DataType<double>::type);
 						Point2f uvPoint, uvBottomLeft;
 
 						//Get Real World Coordinates and copy them to marker map
+
+#if SHIFT_POINT_TO_CENTER
 						//Calculate Center using moments
 						Moments mu = moments(markerCorners[i]);
 						uvPoint = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 						circle(imageDetected, uvPoint, 5, Scalar(0, 0, 255));
-						
-						//uvPoint.x = markerCorners[i][0].x;
-						//uvPoint.y = markerCorners[i][0].y;
+#else					
+						//Use top left corner
+						uvPoint.x = markerCorners[i][0].x;
+						uvPoint.y = markerCorners[i][0].y;
+#endif
 
 						//Get Real World Coordinates of Bottom Left Corner for calculation of Phi
 						uvBottomLeft.x = markerCorners[i][3].x;
@@ -508,21 +223,13 @@ int main(int argc, char *argv[]) {
 						//Invert Rotation Matrix once to reduce computational load
 						invRotMatrix = rotMatrix.inv();
 
-						Mat centerPoint = Mat::ones(2, 1, DataType<double>::type);
-						centerPoint.at<double>(0, 0) = 640;
-						centerPoint.at<double>(1, 0) = 360;
 						Mat uv = Mat::ones(2, 1, DataType<double>::type);
 						uv.at<double>(0, 0) = uvPoint.x;
 						uv.at<double>(1, 0) = uvPoint.y;
 
-						double tmp = norm(centerPoint, uv, NORM_L2);
-						double zCoord = sqrt(Z_CONST * Z_CONST + tmp*tmp);
-
 						getWorldCoordinates(uvPoint, &xyzPoint, invCamMatrix, invRotMatrix, tvecs[i], Z_CONST);
-						getWorldCoordinates(uvBottomLeft, &xyzBottomLeft, invCamMatrix, invRotMatrix, coordOrigin, zCoord);
+						getWorldCoordinates(uvBottomLeft, &xyzBottomLeft, invCamMatrix, invRotMatrix, coordOrigin, Z_CONST);
 
-						cout << "uv: " << uv << endl << "t: " << "Rot: " << rotMatrix; // "xyz: " << xyzPoint << endl << << "Rot: " << rotMatrix << endl << endl;
-						//cout << "ID: " << i << ": " << xyzPoint << endl;
 						//cout <<  norm( xyzOrigin, xyzPoint, NORM_L2) << endl;
 
 						//Get Relative Coordinates (with Coordinate Origin at OriginMarker Top Left Corner)
@@ -566,41 +273,35 @@ int main(int argc, char *argv[]) {
 				}
 
 
-				/*
+#if PRINT_SERIAL_MSG_TO_CL
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
 					if (!marker[i].empty())
 						cout << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
 				}
 				*/
-				//cout << endl << endl;
+#endif
 
 
 
-				if (SERIAL_TRANSMIT)
+#if SERIAL_TRANSMIT
 				{
 					//Send Message to COM Port
 					sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));
 				}
-				else
-				{
-					/* Nothing to do */
-				}
+#endif
 
-
-				//Distance
-				/*
-				double dist = norm(marker[1], marker[2], NORM_L2);
-				*/
 			}
 
 		}
 
+#if SHOW_FINAL_IMAGE
 		//Draw image
 		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 		imshow("Detected Markers", imageDetected);
+#endif
 
-		if (waitKey(10) >= 0) break;
+		if (waitKey(MS_BETWEEN_FRAMES) >= 0) break;
 
 	}
 

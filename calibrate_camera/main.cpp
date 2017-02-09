@@ -129,6 +129,7 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
 }
 
 
+
 int main(int argc, char *argv[]) {
 
 	if (CREATE_CHARUCO_BOARD)
@@ -228,19 +229,18 @@ int main(int argc, char *argv[]) {
 		Mat cameraMatrix, distCoeffs;
 		vector< Mat > rvecs, tvecs;
 		double repError;
-
+/*
 		if (CALIB_FIX_ASPECT_RATIO) {
 			cameraMatrix = Mat::eye(3, 3, CV_64F);
 			cameraMatrix.at< double >(0, 0) = ASPECT_RATIO;
 		}
-
+*/		
+		cameraMatrix = Mat::eye(3, 3, CV_64F);
 		cameraMatrix.at< double >(0, 0) = 900.;
-		cameraMatrix.at< double >(2, 0) = 960.;
+		cameraMatrix.at< double >(0, 2) = 960.;
 		cameraMatrix.at< double >(1, 1) = 900.;
-		cameraMatrix.at< double >(2, 1) = 540.;
-
-
-
+		cameraMatrix.at< double >(1, 2) = 540.;
+		
 		// prepare data for calibration
 		vector< vector< Point2f > > allCornersConcatenated;
 		vector< int > allIdsConcatenated;
