@@ -1,7 +1,6 @@
-
-#include "opencv2\highgui.hpp"
-#include "opencv2\core.hpp"
-
+/* OPENCV INCLUDE */
+#include "opencv2\opencv.hpp"
+/* PROJECT INCLUDES */
 #include "config.h"
 
 using namespace cv;
@@ -23,14 +22,19 @@ int getWorldCoordinates(Point2f uv, Mat *xyz, Mat invCamMatrix, Mat invRotMatrix
 	t.at<double>(1, 0) = tvec[1];
 	t.at<double>(2, 0) = tvec[2];
 
-#if 1 && ROTATE_FIRST
+#if ROTATE_FIRST
 
 	//calculate temp values to solve eq for scaling factor s
 	tmp = invRotMatrix * invCamMatrix * uvPoint;
 	tmp2 = invRotMatrix * t;
 
 	s = (zConst + tmp2.at<double>(2, 0)) / tmp.at<double>(2, 0);
+
 	*xyz = invRotMatrix * (s * invCamMatrix * uvPoint - t);
+	cout << "uv: " << uv.x << "  " << uv.y << endl;
+	cout << "t: " << t << endl;
+	cout << "RotMatrix: " << invRotMatrix <<  endl;
+	cout << (invRotMatrix*(s*invCamMatrix * uvPoint)-t) << endl << endl << endl;
 #else
 
 	tmp = invRotMatrix * invCamMatrix * uvPoint;

@@ -1,9 +1,13 @@
+/* OPENCV INCLUDE */
+#include "opencv2\opencv.hpp"
+#include "opencv2\opencv_modules.hpp"
 #include "opencv2\aruco.hpp"
-#include "opencv2\core.hpp"
-#include "opencv2\highgui.hpp"
-
+/* SYSTEM INCLUDES */
 #include <string>
 #include <iostream>
+
+/* PROJECT INCLUDES */
+#include "config.h"
 
 using namespace cv;
 using namespace std;
@@ -14,7 +18,7 @@ void drawArucoMarker(int id, int size, int borderBits, string ofileName) {
 	*/
 	Mat markerImage;
 
-	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_6X6_250);
+	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
 	aruco::drawMarker(dictionary, id, size, markerImage, borderBits);
 
 	//namedWindow("Aruco Marker", WINDOW_AUTOSIZE);

@@ -1,11 +1,10 @@
-#include "opencv2\highgui.hpp"
-#include "opencv2\core.hpp"
-#include "opencv2\imgproc.hpp"
-#include "opencv2\calib3d.hpp"
+/* SYSTEM INCLUDES */
+#include "opencv2\opencv.hpp"
+#include "opencv2\opencv_modules.hpp"
 #include "opencv2\xfeatures2d.hpp"
-
+/* SYSTEM INCLUDES */
 #include <iostream>
-
+/* PROJECT INCLUDES */
 #include "config.h"
 
 using namespace cv;

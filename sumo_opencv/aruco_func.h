@@ -1,8 +1,9 @@
 #pragma once
-#include "opencv2\aruco.hpp"
-#include "opencv2\core.hpp"
-#include "opencv2\highgui.hpp"
 
+/* OPENCV INCLUDE */
+#include "opencv2\opencv.hpp"
+
+/* SYSTEM INCLUDES */
 #include <string>
 
 using namespace cv;

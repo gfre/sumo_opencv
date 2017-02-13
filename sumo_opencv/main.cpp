@@ -3,16 +3,10 @@ Author: Nico Engel
 
 */
 
-/* OPENCV INCLUDES */
+/* OPENCV INCLUDE */
+#include "opencv2\opencv.hpp"
 #include "opencv2\aruco.hpp"
-#include "opencv2\highgui.hpp"
-#include "opencv2\core.hpp"
-#include "opencv2\imgproc.hpp"
-#include "opencv2\calib3d.hpp"
-#include "opencv2\plot.hpp"
-#include "opencv2\xfeatures2d.hpp"
-#include "opencv2\aruco\charuco.hpp"
-
+#include "opencv2\opencv_modules.hpp"
 /* SYSTEM INCLUDES */
 #include <string>
 #include <stdio.h>
@@ -23,7 +17,6 @@ Author: Nico Engel
 #include <map>
 #include <math.h>
 #include <ctime>
-
 /* PROJECT INCLUDES */
 #include "config.h"
 #include "aruco_func.h"
@@ -41,12 +34,16 @@ int main(int argc, char *argv[]) {
 	for (int i = 0; i <= 25; i++) {
 		string fileName, fileFormat, file;
 
-		int sizeInPixel = 1181;
-		int borderBits = 1;
+		/* Calculate Pixel --> cm
+			https://www.blitzrechner.de/pixel-zentimeter-umrechnen/
+			@300dpi - 118px/cm
+		*/
+		int sizeInPixel = 1772;	// = 15cm @ 300dpi
+		int borderBits = 2;
 
 		fileName = to_string(i);
 		fileFormat = ".png";
-		file = fileName + fileFormat;
+		file = "aruco_codes/" + fileName + fileFormat;
 		drawArucoMarker(i, sizeInPixel, borderBits, file);
 	}
 #endif
@@ -63,6 +60,13 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	invCamMatrix = camMatrix.inv();
+
+#if PRINT_INTR_PARA
+	cout << "CamMatrix: " << camMatrix << endl;
+	cout << "------------------------------------------" << endl;
+	cout << "inv CamMatrix: " << invCamMatrix << endl;
+	cout << "============================================" << endl << endl << endl;
+#endif
 
 	// Set Aruco Dictionary
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_6X6_250);
@@ -125,7 +129,12 @@ int main(int argc, char *argv[]) {
 		map<int, Vec3d> markerTvecs;
 
 		//Detect Markers
-		aruco::detectMarkers(imageDetected, dictionary, markerCorners, markerIds);
+		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
+		param->doCornerRefinement = true;
+		param->cornerRefinementWinSize = 2;
+		param->cornerRefinementMaxIterations = 300;
+		param->cornerRefinementMinAccuracy = 0.01;
+		aruco::detectMarkers(imageDetected, dictionary, markerCorners, markerIds, param);
 
 		//If at least one marker is detected ...
 		if (markerIds.size() > 0)
@@ -146,7 +155,7 @@ int main(int argc, char *argv[]) {
 
 			for (int i = 0; i < markerIds.size(); i++) 
 			{
-				if (markerIds[i] == (int)ORIGIN_MARKER_ID)
+				if (markerIds[i] == ORIGIN_MARKER_ID)
 				{
 					originIndex = i;
 					isOriginVisible = 1;
@@ -168,7 +177,20 @@ int main(int argc, char *argv[]) {
 					uvOrigin.y = markerCorners[i][0].y;
 #endif
 
-					getWorldCoordinates(uvOrigin, &xyzOrigin, invCamMatrix, invRotMatrix, coordOrigin, 3050.0);
+#if PRINT_UV_COORDS 
+					cout << "Origin Marker (ID: " << markerIds[i] << ")" << endl;
+					cout << "------------------------------------------" << endl;
+					cout << "U: " << uvOrigin.x << " V: " << uvOrigin.y << endl;
+					cout << "RotMatrix: " << rotMatrix << endl;
+					cout << "Transl: " << tvecs[i] << endl;
+					cout << "============================================" << endl << endl << endl;
+#endif
+					//getWorldCoordinates(uvOrigin, &xyzOrigin, invCamMatrix, invRotMatrix, coordOrigin, Z_CONST);
+
+#if PRINT_WOLRD_COORDS 
+
+					cout << "Marker ID: " << markerIds[i] << " - X:" << xyzOrigin.at<double>(0, 0) << " Y: " << xyzOrigin.at<double>(1, 0) << " Z: " << xyzOrigin.at<double>(2, 0) << endl;
+#endif
 				}
 			}
 
@@ -204,7 +226,7 @@ int main(int argc, char *argv[]) {
 						//Calculate Center using moments
 						Moments mu = moments(markerCorners[i]);
 						uvPoint = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
-						circle(imageDetected, uvPoint, 5, Scalar(0, 0, 255));
+						circle(imageDetected, uvPoint, 5, Scalar(0, 255,0));
 #else
 						//Use top left corner
 						uvPoint.x = markerCorners[i][0].x;
@@ -224,27 +246,49 @@ int main(int argc, char *argv[]) {
 						uv.at<double>(0, 0) = uvPoint.x;
 						uv.at<double>(1, 0) = uvPoint.y;
 
+#if PRINT_UV_COORDS 
+						cout << "ID: " << markerIds[i] << endl;
+						cout << "------------------------------------------" << endl;
+						cout << "U: " << uvPoint.x << " V: " << uvPoint.y << endl;
+						cout << "RotMatrix: " << rotMatrix << endl;
+						cout << "Transl: " << tvecs[i] << endl;
+ 
+						cout << "============================================" << endl << endl << endl;
+#endif
+
+
 						getWorldCoordinates(uvPoint, &xyzPoint, invCamMatrix, invRotMatrix, tvecs[i], Z_CONST);
-						getWorldCoordinates(uvBottomLeft, &xyzBottomLeft, invCamMatrix, invRotMatrix, coordOrigin, Z_CONST);
+						//getWorldCoordinates(uvBottomLeft, &xyzBottomLeft, invCamMatrix, invRotMatrix, tvecs[i], Z_CONST);
 
 						//cout <<  norm( xyzOrigin, xyzPoint, NORM_L2) << endl;
-
+#if USE_REL_COORDS
 						//Get Relative Coordinates (with Coordinate Origin at OriginMarker Top Left Corner)
-						xyzPoint.at<double>(0, 0) = xyzOrigin.at<double>(0, 0) - xyzPoint.at<double>(0, 0);	// rel. x-Coordinate
-						xyzPoint.at<double>(1, 0) = xyzOrigin.at<double>(1, 0) - xyzPoint.at<double>(1, 0);	// rel. y-Coordinate
+						xyzPoint.at<double>(0, 0) -= xyzOrigin.at<double>(0, 0);	// rel. x-Coordinate
+						xyzPoint.at<double>(1, 0) -= xyzOrigin.at<double>(1, 0);	// rel. y-Coordinate
 
-						xyzBottomLeft.at<double>(0, 0) = xyzBottomLeft.at<double>(0, 0) - xyzPoint.at<double>(0, 0);	// rel. x-Coordinate
-						xyzBottomLeft.at<double>(1, 0) = xyzBottomLeft.at<double>(1, 0) - xyzPoint.at<double>(1, 0);	// rel. y-Coordinate
-
+						xyzBottomLeft.at<double>(0, 0) -= xyzPoint.at<double>(0, 0);	// rel. x-Coordinate
+						xyzBottomLeft.at<double>(1, 0) -= xyzPoint.at<double>(1, 0);	// rel. y-Coordinate
+#endif
 						marker[markerIds[i]] = xyzPoint;
 						cornerBottomLeft[markerIds[i]] = xyzBottomLeft;
+
+#if PRINT_WOLRD_COORDS 
+
+						cout << "Marker ID: " << markerIds[i] << " - X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0) << endl;
+#endif
+
 					}
 				}
 
+
+
+#if SERIAL_TRANSMIT
 				uint16_t message[MAX_MSG_LENGTH];
 
-				for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++) {
-					if (!marker[i].empty()) {
+				for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++) 
+				{
+					if (!marker[i].empty()) 
+					{
 						//Marker with ID = i was detected
 
 						uint16_t phi = (uint16_t)(marker[i].at<double>(0, 0) + cornerBottomLeft[i].at<double>(0, 0));
@@ -253,7 +297,8 @@ int main(int argc, char *argv[]) {
 						message[3 * i + 1] = (uint16_t)(marker[i].at<double>(1, 0)); // y - value
 						message[3 * i + 2] = phi; // phi - value
 					}
-					else {
+					else 
+					{
 						//Marker with ID = i was NOT detected -> Transmit VAR_INVALID
 
 						message[3 * i] = VAR_INVALID; // x - value
@@ -262,21 +307,17 @@ int main(int argc, char *argv[]) {
 					}
 				}
 
-#if PRINT_SERIAL_MSG_TO_CL
+				//Send Message to COM Port
+				sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));
+#endif
+#if PRINT_SERIAL_MSG_TO_CL && SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
 					if (!marker[i].empty())
 						cout << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
 				}
-				*/
 #endif
 
-#if SERIAL_TRANSMIT
-				{
-					//Send Message to COM Port
-					sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));
-				}
-#endif
 			}
 		}
 
@@ -297,7 +338,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	inputVideo1.release();
+
 #if USE_STITCHER
 	inputVideo2.release();
 #endif
+
 }

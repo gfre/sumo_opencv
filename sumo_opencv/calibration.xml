@@ -10,7 +10,7 @@
   <dt>d</dt>
   <data>
     1.5302016732019781e+03 0. 960. 0.
-    1.5279227365504946e+03 590. 0. 0. 1.</data></camera_matrix>
+    1.5279227365504946e+03 540. 0. 0. 1.</data></camera_matrix>
 <distortion_coefficients type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
