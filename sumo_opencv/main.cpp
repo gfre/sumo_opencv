@@ -3,7 +3,6 @@ Author: Nico Engel
 
 */
 
-
 /* OPENCV INCLUDES */
 #include "opencv2\aruco.hpp"
 #include "opencv2\highgui.hpp"
@@ -36,33 +35,30 @@ Author: Nico Engel
 using namespace std;
 using namespace cv;
 
-
 int main(int argc, char *argv[]) {
-	
+
 #if GENERATE_ARUCO_CODES
 	for (int i = 0; i <= 25; i++) {
+		string fileName, fileFormat, file;
 
-	string fileName, fileFormat, file;
+		int sizeInPixel = 1181;
+		int borderBits = 1;
 
-	int sizeInPixel = 1181;
-	int borderBits = 1;
-
-	fileName = to_string(i);
-	fileFormat = ".png";
-	file = fileName + fileFormat;
-	drawArucoMarker(i, sizeInPixel, borderBits, file);
-
+		fileName = to_string(i);
+		fileFormat = ".png";
+		file = fileName + fileFormat;
+		drawArucoMarker(i, sizeInPixel, borderBits, file);
 	}
 #endif
 
 	//Camera Parameter xml configuration file
-	string configFile = "CALIB_FILE_NAME";
-
+	string configFile = CALIB_FILE_NAME;
 
 	// Open Camera Parameter File
 	Mat camMatrix, invCamMatrix, distCoeffs;
 	bool readOK = readCameraParameters(configFile, camMatrix, distCoeffs);
-	if (!readOK) {
+	if (!readOK) 
+	{
 		cerr << "Invalid camera file" << endl;
 		return -1;
 	}
@@ -75,44 +71,47 @@ int main(int argc, char *argv[]) {
 	VideoCapture inputVideo1, inputVideo2;
 
 	//Select Webcams
-	inputVideo1.open(2);
-	inputVideo2.open(1);
+	inputVideo1.open(FIRST_CAM_ID);
 
 	//Set Resolution
 	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
+#if USE_STITCHER
+	inputVideo2.open(SEC_CAM_ID);
+	//Set Resolution
 	inputVideo2.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	inputVideo2.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+#endif
 
 	//initialize Mat objects
 	Mat image1, image2, stitchedImage, imageDetected, rotMatrix, invRotMatrix, H;
 
-
 #if RECALCULATE_HOMOGRAPHY
-		inputVideo1.retrieve(image1);
-		inputVideo2.retrieve(image2);
-		getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, false);
-		// Print new Homography Matrix for saving
-		//cout << H;
+	inputVideo1.retrieve(image1);
+	inputVideo2.retrieve(image2);
+	getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, false);
+	// Print new Homography Matrix for saving
+	//cout << H;
 #else
-		// Use "old" Homography Matrix
-		H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
+	// Use "old" Homography Matrix
+	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
 #endif
 
 	//Grab frames continuously
-	while (inputVideo1.grab() && inputVideo2.grab()) {
-
+	while (true) 
+	{
 		inputVideo1.retrieve(image1);
-		inputVideo2.retrieve(image2);
 
 #if USE_STITCHER
+		inputVideo2.retrieve(image2);
+
 		stitcher(image1, image2, &stitchedImage, H);
 		stitchedImage.copyTo(imageDetected);
 #else
 		image1.copyTo(imageDetected);
 #endif
-		
+
 #if UNDISTORT_IMAGE
 		Mat imageUndistorted;
 		undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
@@ -136,7 +135,6 @@ int main(int argc, char *argv[]) {
 			// TODO : Improve Corner detection
 			// http://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghlinesp#cornersubpix
 			// http://docs.opencv.org/3.1.0/d5/dae/tutorial_aruco_detection.html
-			
 
 			//Check if the Origin Marker was detected
 			int isOriginVisible = 0;
@@ -146,8 +144,8 @@ int main(int argc, char *argv[]) {
 			Point2f uvOrigin;
 			Mat xyzOrigin = Mat::ones(3, 1, DataType<double>::type);
 
-			for (int i = 0; i < markerIds.size(); i++) {
-
+			for (int i = 0; i < markerIds.size(); i++) 
+			{
 				if (markerIds[i] == (int)ORIGIN_MARKER_ID)
 				{
 					originIndex = i;
@@ -181,7 +179,6 @@ int main(int argc, char *argv[]) {
 			}
 			else
 			{
-
 				//Save all detected markers in map "marker"
 				for (unsigned int i = 0; i < markerIds.size(); i++)
 				{
@@ -196,7 +193,7 @@ int main(int argc, char *argv[]) {
 						//Invert Rotation Matrix once to reduce computational load
 						invRotMatrix = rotMatrix.inv();
 
-						circle(imageDetected, Point2f(FRAME_WIDTH/2, FRAME_HEIGHT/2), 5, Scalar(0, 0, 255));
+						circle(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 
 						Mat xyzPoint = Mat::ones(3, 1, DataType<double>::type), relXYZPoint, xyzBottomLeft = Mat::ones(3, 1, DataType<double>::type);
 						Point2f uvPoint, uvBottomLeft;
@@ -208,7 +205,7 @@ int main(int argc, char *argv[]) {
 						Moments mu = moments(markerCorners[i]);
 						uvPoint = Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 						circle(imageDetected, uvPoint, 5, Scalar(0, 0, 255));
-#else					
+#else
 						//Use top left corner
 						uvPoint.x = markerCorners[i][0].x;
 						uvPoint.y = markerCorners[i][0].y;
@@ -239,19 +236,14 @@ int main(int argc, char *argv[]) {
 						xyzBottomLeft.at<double>(0, 0) = xyzBottomLeft.at<double>(0, 0) - xyzPoint.at<double>(0, 0);	// rel. x-Coordinate
 						xyzBottomLeft.at<double>(1, 0) = xyzBottomLeft.at<double>(1, 0) - xyzPoint.at<double>(1, 0);	// rel. y-Coordinate
 
-
 						marker[markerIds[i]] = xyzPoint;
 						cornerBottomLeft[markerIds[i]] = xyzBottomLeft;
-						
 					}
-
-
 				}
 
 				uint16_t message[MAX_MSG_LENGTH];
 
 				for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++) {
-
 					if (!marker[i].empty()) {
 						//Marker with ID = i was detected
 
@@ -260,7 +252,6 @@ int main(int argc, char *argv[]) {
 						message[3 * i] = (uint16_t)(marker[i].at<double>(0, 0)); // x - value
 						message[3 * i + 1] = (uint16_t)(marker[i].at<double>(1, 0)); // y - value
 						message[3 * i + 2] = phi; // phi - value
-
 					}
 					else {
 						//Marker with ID = i was NOT detected -> Transmit VAR_INVALID
@@ -269,9 +260,7 @@ int main(int argc, char *argv[]) {
 						message[3 * i + 1] = VAR_INVALID; // y - value
 						message[3 * i + 2] = VAR_INVALID; // phi; // phi - value
 					}
-
 				}
-
 
 #if PRINT_SERIAL_MSG_TO_CL
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
@@ -282,18 +271,15 @@ int main(int argc, char *argv[]) {
 				*/
 #endif
 
-
-
 #if SERIAL_TRANSMIT
 				{
 					//Send Message to COM Port
 					sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));
 				}
 #endif
-
 			}
-
 		}
+
 
 #if SHOW_FINAL_IMAGE
 		//Draw image
@@ -301,13 +287,17 @@ int main(int argc, char *argv[]) {
 		imshow("Detected Markers", imageDetected);
 #endif
 
-		if (waitKey(MS_BETWEEN_FRAMES) >= 0) break;
+		//End loop by pressing "c"
+		char c = waitKey(MS_BETWEEN_FRAMES);
+		if (67 == c || 99 == c) 
+		{
+			break;
+		}
 
 	}
 
 	inputVideo1.release();
+#if USE_STITCHER
 	inputVideo2.release();
-
+#endif
 }
-
-

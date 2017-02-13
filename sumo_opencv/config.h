@@ -11,9 +11,11 @@
 #define PRINT_SERIAL_MSG_TO_CL	(FALSE)										//Print the Message to command Line
 #define SHOW_FINAL_IMAGE		(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 
-#define FRAME_WIDTH				(1920)										// Camera image width
-#define FRAME_HEIGHT			(1080)										// Camera image height
-#define MS_BETWEEN_FRAMES		(10)										// wait 10ms before grabbing new frame, may impact performance
+#define FIRST_CAM_ID			(1)											//ID of first camera
+#define SEC_CAM_ID				(2)											//ID of second camera
+#define FRAME_WIDTH				(1920)										//Camera image width
+#define FRAME_HEIGHT			(1080)										//Camera image height
+#define MS_BETWEEN_FRAMES		(10)										//wait 10ms before grabbing new frame, may impact performance
 
 #define CALIB_FILE_NAME			"calibration.xml"
 
