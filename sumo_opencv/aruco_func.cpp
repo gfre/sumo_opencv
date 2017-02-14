@@ -13,9 +13,11 @@ using namespace cv;
 using namespace std;
 
 //Function to draw Aruco marker with id, size in pixel, borderBits (must be greater or equal 1), and filename
-void drawArucoMarker(int id, int size, int borderBits, string ofileName) {
+Std_Rtn_Type drawArucoMarker(int id, int size, int borderBits, string ofileName) {
 	/* Draw Aruco Marker
 	*/
+	Std_Rtn_Type returnCode = ERR_OK;
+
 	Mat markerImage;
 
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
@@ -26,15 +28,23 @@ void drawArucoMarker(int id, int size, int borderBits, string ofileName) {
 	imwrite(ofileName, markerImage);
 	//waitKey(0);
 	cout << ofileName << " Marker succesfully created" << endl;
+
+	return returnCode;
 }
 
 
 //Function to read Camera Parameters from file
-bool readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs) {
+Std_Rtn_Type readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs) {
+	
+	Std_Rtn_Type returnCode = ERR_OK;
+	
 	FileStorage fs(filename, FileStorage::READ);
 	if (!fs.isOpened())
-		return false;
+		returnCode = ERR_INV_PARAM_FILE;
+	
 	fs["camera_matrix"] >> camMatrix;
+	
 	fs["distortion_coefficients"] >> distCoeffs;
-	return true;
+	
+	return returnCode;
 }

@@ -10,20 +10,20 @@
 using namespace std;
 using namespace cv;
 
-#define CREATE_CHARUCO_BOARD	(0)
-#define CALIBRATE_CAMERA		(1)
+#define CREATE_CHARUCO_BOARD	(1)
+#define CALIBRATE_CAMERA		(0)
 #define SHOW_CHESSBOARD_CORNERS (1)
 #define CALIB_FIX_ASPECT_RATIO	(1)
 
 
 
-#define NUM_SQUARES_X			(5)
-#define NUM_SQUARES_Y			(7)
-#define SQUARE_LENGTH			(330)						// in pixel
-#define MARKER_LENGTH			(230)						// in pixel
-#define SQUARE_LENGTH_M			(0.03665)					// in meter
-#define MARKER_LENGTH_M			(0.02575)					// in meter
-#define DICTIONARY_ID			(10)						// 10 = DICT_6x6_250
+#define NUM_SQUARES_X			(4)
+#define NUM_SQUARES_Y			(6)
+#define SQUARE_LENGTH			(397*0+0.14)						// in pixel
+#define MARKER_LENGTH			(283*0+0.1)						// in pixel
+#define SQUARE_LENGTH_M			(0.04985)					// in meter
+#define MARKER_LENGTH_M			(0.0349)					// in meter
+#define DICTIONARY_ID			(aruco::DICT_4X4_50)						
 #define BORDER_BITS				(1)
 #define RES_HEIGHT				(1080)
 #define RES_WIDTH				(1920)
@@ -34,20 +34,20 @@ using namespace cv;
 #define FILENAME_CHARUCO		"charuco.png"
 #define FILENAME_CALIB			"calibration_door.xml"
 
-#define CAMERA_ID				(2)							//SELECT WHICH CAMERA TO CALIBRATE
+#define CAMERA_ID				(1)							//SELECT WHICH CAMERA TO CALIBRATE
 
 
 
-int createCharucoBoard(string filename, int squaresX, int squaresY, int squareLength, int markerLength, int dictionaryId, int borderBits)
+int createCharucoBoard(string filename, int squaresX, int squaresY, float squareLength, float markerLength, int dictionaryId, int borderBits)
 {
 
-	int margins = squareLength - markerLength;
+	float margins = squareLength - markerLength;
 
-	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(dictionaryId));
+	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(DICTIONARY_ID));
 
 	Size imageSize;
-	imageSize.width = squaresX * squareLength + 2 * margins;
-	imageSize.height = squaresY * squareLength + 2 * margins;
+	imageSize.width =(( squaresX * squareLength +  2* margins) * 1000 / 25.4 * 72)*0+2834.645669;
+	imageSize.height = ((squaresY * squareLength + 2*margins)*1000/25.4*72) * 0 + 2834.645669;
 
 	Ptr<aruco::CharucoBoard> board = aruco::CharucoBoard::create(squaresX, squaresY, (float)squareLength, (float)markerLength, dictionary);
 
@@ -132,13 +132,12 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
 
 int main(int argc, char *argv[]) {
 
-	if (CREATE_CHARUCO_BOARD)
-	{
+#if CREATE_CHARUCO_BOARD
 		createCharucoBoard(FILENAME_CHARUCO, NUM_SQUARES_X, NUM_SQUARES_Y, SQUARE_LENGTH, MARKER_LENGTH, DICTIONARY_ID, BORDER_BITS);
-	} 
+#endif
 	
-	if (CALIBRATE_CAMERA)
-	{
+#if CALIBRATE_CAMERA
+	
 		int calibrationFlags = 0;
 		float aspectRatio = 1;
 
@@ -319,8 +318,8 @@ int main(int argc, char *argv[]) {
 
 		return 0;
 
-	}
-
+	
+#endif
 
 	return 0;
 }

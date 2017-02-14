@@ -13,11 +13,11 @@
 #define PRINT_SERIAL_MSG_TO_CL	(FALSE)										//Print the Serial Message to Command Line
 #define SHOW_FINAL_IMAGE		(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 
-#define PRINT_WOLRD_COORDS		(FALSE)										//Print World Coordinates to Command Line
+#define PRINT_WOLRD_COORDS		(TRUE)										
 #define PRINT_UV_COORDS			(FALSE)
 #define USE_REL_COORDS			(TRUE)
 #define PRINT_INTR_PARA         (FALSE)
-
+#define SHOW_FRAME_CENTER		(TRUE)
 
 #define FIRST_CAM_ID			(1)											//ID of first camera
 #define SEC_CAM_ID				(2)											//ID of second camera
@@ -26,17 +26,27 @@
 #define MS_BETWEEN_FRAMES		(10)										//wait 10ms before grabbing new frame, may impact performance
 
 #define CALIB_FILE_NAME			"calibration.xml"
-#define ARUCO_DICT				DICT_4X4_50 
+#define ARUCO_DICT				(aruco::DICT_4X4_50) 
 
-#define MARKER_LENGTH			(98)										//Marker length in mm
+#define MARKER_LENGTH			(150)										//Marker length in mm (98 - 150)
 #define MAX_NUMBER_OF_MARKERS	(4)											//How many markers/robots exist
 #define NUM_OF_VARIABLES		(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID		(24)										//Select which marker acts as the origin of world coordinate system
 #define MIN_HESSIAN				(500)										//Minimum Hessian threshold for SURF Algorithm
-#define Z_CONST					(3250)											//Distance from Camera to Marker Plane in mm
+#define Z_CONST					(3250)										//Distance from Camera to Marker Plane in mm
 
 #define HOMOGRAPHY_M			0.9568005531058007, 0.001879261708537507, 488.6830366627206, -0.02376243394348695, 0.9520233532133866, 17.3904366427672, -5.302341910721238e-06, -2.612583953997515e-05, 1
 
-#define ERR_OK					(0)							
+
+//Define Standard Return Type
+typedef unsigned int Std_Rtn_Type;
+
+//Error Codes
+#define ERR_OK					(0u)	
+#define ERR_INV_PARAM_FILE		(1u)
+#define ERR_NO_ORIGIN			(2u)
 #define VAR_INVALID				(0xFFEEu)									//Send this instead of coordinates if marker was not detected
+
+#define ERR_STR_NO_ORIGIN		"No Origin Marker detected"
+#define ERR_STR_NO_MARKER		"No Marker detected"
