@@ -13,10 +13,10 @@ using namespace cv;
 using namespace std;
 
 //Function to draw Aruco marker with id, size in pixel, borderBits (must be greater or equal 1), and filename
-Std_Rtn_Type drawArucoMarker(int id, int size, int borderBits, string ofileName) {
+int drawArucoMarker(int id, int size, int borderBits, string ofileName) {
 	/* Draw Aruco Marker
 	*/
-	Std_Rtn_Type returnCode = ERR_OK;
+	int returnCode = ERR_OK;
 
 	Mat markerImage;
 
@@ -34,9 +34,9 @@ Std_Rtn_Type drawArucoMarker(int id, int size, int borderBits, string ofileName)
 
 
 //Function to read Camera Parameters from file
-Std_Rtn_Type readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs) {
+int readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs) {
 	
-	Std_Rtn_Type returnCode = ERR_OK;
+	int returnCode = ERR_OK;
 	
 	FileStorage fs(filename, FileStorage::READ);
 	if (!fs.isOpened())
@@ -47,4 +47,26 @@ Std_Rtn_Type readCameraParameters(string filename, Mat &camMatrix, Mat &distCoef
 	fs["distortion_coefficients"] >> distCoeffs;
 	
 	return returnCode;
+}
+
+//Function to generate Aruco Codes
+int generateAruco()
+{
+	for (int i = 0; i <= 25; i++) {
+		string fileName, fileFormat, file;
+
+		/* Calculate Pixel --> cm
+		https://www.blitzrechner.de/pixel-zentimeter-umrechnen/
+		@300dpi - 118px/cm
+		*/
+		int sizeInPixel = 1772;	// = 15cm @ 300dpi
+		int borderBits = 2;
+
+		fileName = to_string(i);
+		fileFormat = ".png";
+		file = "aruco_codes/" + fileName + fileFormat;
+		drawArucoMarker(i, sizeInPixel, borderBits, file);
+	}
+
+	return ERR_OK;
 }

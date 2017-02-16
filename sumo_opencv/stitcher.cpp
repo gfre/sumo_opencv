@@ -11,11 +11,11 @@ using namespace cv;
 using namespace std;
 
 //Calculate Homography Matrix for image stitching
-Std_Rtn_Type getHomographyMatrix(Mat image1, Mat image2, Mat *H, int minHessian, double minDist = 100.0, bool drawGoodMatches = false)
+int getHomographyMatrix(Mat image1, Mat image2, Mat *H, int minHessian, double minDist = 100.0, bool drawGoodMatches = false)
 {
 	// TODO : Write Description for getHomographyMatrix
 
-	Std_Rtn_Type returnCode = ERR_OK;
+	int returnCode = ERR_OK;
 
 	//Init
 	Mat descriptor1, descriptor2, gray1, gray2;
@@ -90,11 +90,11 @@ Std_Rtn_Type getHomographyMatrix(Mat image1, Mat image2, Mat *H, int minHessian,
 }
 
 //Image Stitcher
-Std_Rtn_Type stitcher(Mat image1, Mat image2, Mat *stitchedImage, Mat H)
+int stitcher(Mat image1, Mat image2, Mat *stitchedImage, Mat H)
 {
 	// TODO : Write Description for stitcher
 
-	Std_Rtn_Type returnCode = ERR_OK;
+	int returnCode = ERR_OK;
 
 	//flip images for proper stitching
 	flip(image1.t(), image1, 1);

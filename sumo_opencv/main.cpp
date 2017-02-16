@@ -16,7 +16,6 @@ Author: Nico Engel
 #include <stdint.h>
 #include <map>
 #include <math.h>
-#include <ctime>
 /* PROJECT INCLUDES */
 #include "config.h"
 #include "aruco_func.h"
@@ -28,39 +27,27 @@ Author: Nico Engel
 using namespace std;
 using namespace cv;
 
-Std_Rtn_Type main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
-	Std_Rtn_Type returnCode = ERR_OK;
+	int returnCode = ERR_OK;
 
 #if GENERATE_ARUCO_CODES
-	for (int i = 0; i <= 25; i++) {
-		string fileName, fileFormat, file;
-
-		/* Calculate Pixel --> cm
-		https://www.blitzrechner.de/pixel-zentimeter-umrechnen/
-		@300dpi - 118px/cm
-		*/
-		int sizeInPixel = 1772;	// = 15cm @ 300dpi
-		int borderBits = 2;
-
-		fileName = to_string(i);
-		fileFormat = ".png";
-		file = "aruco_codes/" + fileName + fileFormat;
-		drawArucoMarker(i, sizeInPixel, borderBits, file);
-	}
+	generateAruco();
 #endif
 
 	//Camera Parameter xml configuration file
 	string configFile = CALIB_FILE_NAME;
 
 	// Open Camera Parameter File
-	Mat camMatrix, invCamMatrix, distCoeffs;
+	cv::Mat camMatrix, invCamMatrix, distCoeffs;
 	if (ERR_OK != readCameraParameters(configFile, camMatrix, distCoeffs))
 	{
 		cerr << "Invalid camera file" << endl;
 		returnCode = ERR_INV_PARAM_FILE;
 	}
 	invCamMatrix = camMatrix.inv();
+	cout << distCoeffs << endl;
 
 #if PRINT_INTR_PARA
 	cout << "CamMatrix: " << camMatrix << endl;
@@ -138,9 +125,9 @@ Std_Rtn_Type main(int argc, char *argv[]) {
 		// http://docs.opencv.org/3.1.0/d5/dae/tutorial_aruco_detection.html
 		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
 		param->doCornerRefinement = true;
-		param->cornerRefinementWinSize = 2;
-		param->cornerRefinementMaxIterations = 500;
-		param->cornerRefinementMinAccuracy = 0.01;
+		param->cornerRefinementWinSize = 3;
+		param->cornerRefinementMaxIterations = 50;
+		param->cornerRefinementMinAccuracy = 0.1;
 
 		//Detect Markers
 		aruco::detectMarkers(imageDetected, dictionary, markerCorners, markerIds, param);
@@ -168,29 +155,9 @@ Std_Rtn_Type main(int argc, char *argv[]) {
 				getMarkerXYZ(&markerIds, &imageDetected, originIndex, &rvecs, &tvecs, &invCamMatrix, &camMatrix, &distCoeffs, &markerCorners, &xyzOrigin, &marker, &cornerBottomLeft);
 
 #if SERIAL_TRANSMIT
-				uint16_t message[MAX_MSG_LENGTH];
+				uint16 message[MAX_MSG_LENGTH];
 
-				for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
-				{
-					if (!marker[i].empty())
-					{
-						//Marker with ID = i was detected
-
-						uint16_t phi = (uint16_t)(marker[i].at<double>(0, 0) + cornerBottomLeft[i].at<double>(0, 0));
-
-						message[3 * i] = (uint16_t)(marker[i].at<double>(0, 0)); // x - value
-						message[3 * i + 1] = (uint16_t)(marker[i].at<double>(1, 0)); // y - value
-						message[3 * i + 2] = phi; // phi - value
-					}
-					else
-					{
-						//Marker with ID = i was NOT detected -> Transmit VAR_INVALID
-
-						message[3 * i] = VAR_INVALID; // x - value
-						message[3 * i + 1] = VAR_INVALID; // y - value
-						message[3 * i + 2] = VAR_INVALID; // phi; // phi - value
-					}
-				}
+				
 
 				//Send Message to COM Port
 				sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));

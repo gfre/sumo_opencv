@@ -10,10 +10,9 @@
 using namespace std;
 using namespace cv;
 
-#define CREATE_CHARUCO_BOARD	(1)
-#define CALIBRATE_CAMERA		(0)
+#define CREATE_CHARUCO_BOARD	(0)
+#define CALIBRATE_CAMERA		(1)
 #define SHOW_CHESSBOARD_CORNERS (1)
-#define CALIB_FIX_ASPECT_RATIO	(1)
 
 
 
@@ -21,8 +20,8 @@ using namespace cv;
 #define NUM_SQUARES_Y			(6)
 #define SQUARE_LENGTH			(397*0+0.14)						// in pixel
 #define MARKER_LENGTH			(283*0+0.1)						// in pixel
-#define SQUARE_LENGTH_M			(0.04985)					// in meter
-#define MARKER_LENGTH_M			(0.0349)					// in meter
+#define SQUARE_LENGTH_M			(0.12165)					// in meter
+#define MARKER_LENGTH_M			(0.09405)					// in meter
 #define DICTIONARY_ID			(aruco::DICT_4X4_50)						
 #define BORDER_BITS				(1)
 #define RES_HEIGHT				(1080)
@@ -35,7 +34,7 @@ using namespace cv;
 #define FILENAME_CALIB			"calibration_door.xml"
 
 #define CAMERA_ID				(1)							//SELECT WHICH CAMERA TO CALIBRATE
-
+#define FOCAL_LENGTH_EST        (1550)
 
 
 int createCharucoBoard(string filename, int squaresX, int squaresY, float squareLength, float markerLength, int dictionaryId, int borderBits)
@@ -138,10 +137,17 @@ int main(int argc, char *argv[]) {
 	
 #if CALIBRATE_CAMERA
 	
-		int calibrationFlags = 0;
+		int calibrationFlags = CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL;
 		float aspectRatio = 1;
 
+
+
 		Ptr<aruco::DetectorParameters> detectorParams = aruco::DetectorParameters::create();
+		detectorParams->doCornerRefinement = true;
+		detectorParams->cornerRefinementWinSize = 5;
+		detectorParams->cornerRefinementMaxIterations = 50;
+		detectorParams->cornerRefinementMinAccuracy = 0.01;
+
 
 		VideoCapture inputVideo;
 		inputVideo.open(CAMERA_ID);
@@ -161,6 +167,21 @@ int main(int argc, char *argv[]) {
 		vector< vector< int > > allIds;
 		vector< Mat > allImgs;
 		Size imgSize;
+
+		Mat cameraMatrix = Mat::zeros(3, 3, CV_64F);
+#if 1
+		if (calibrationFlags & CV_CALIB_USE_INTRINSIC_GUESS)
+		{
+
+			cameraMatrix.at< double >(0, 0) = FOCAL_LENGTH_EST;
+			cameraMatrix.at< double >(0, 2) = RES_WIDTH / 2;
+			cameraMatrix.at< double >(1, 1) = FOCAL_LENGTH_EST;
+			cameraMatrix.at< double >(1, 2) = RES_HEIGHT / 2;
+			cameraMatrix.at< double >(2, 2) = 1;
+			cout << cameraMatrix << endl;
+		}
+#endif
+
 
 		while (inputVideo.grab()) 
 		{
@@ -197,7 +218,7 @@ int main(int argc, char *argv[]) {
 			char key = (char)waitKey(10);
 
 			if (key == 27) break;
-			/*
+			
 			if (key == 'c' && ids.size() > 0) 
 			{
 				cout << "Frame captured" << endl;
@@ -206,7 +227,7 @@ int main(int argc, char *argv[]) {
 				allImgs.push_back(image);
 				imgSize = image.size();
 			}
-			*/
+			/*
 			if (ids.size() > 10)
 			{
 				cout << "Frame captured" << endl;
@@ -215,6 +236,7 @@ int main(int argc, char *argv[]) {
 				allImgs.push_back(image);
 				imgSize = image.size();
 			}
+			*/
 
 		}
 
@@ -225,21 +247,11 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 
-		Mat cameraMatrix, distCoeffs;
+		Mat distCoeffs;
 		vector< Mat > rvecs, tvecs;
 		double repError;
-/*
-		if (CALIB_FIX_ASPECT_RATIO) {
-			cameraMatrix = Mat::eye(3, 3, CV_64F);
-			cameraMatrix.at< double >(0, 0) = ASPECT_RATIO;
-		}
-*/		
-		cameraMatrix = Mat::eye(3, 3, CV_64F);
-		cameraMatrix.at< double >(0, 0) = 900.;
-		cameraMatrix.at< double >(0, 2) = 960.;
-		cameraMatrix.at< double >(1, 1) = 900.;
-		cameraMatrix.at< double >(1, 2) = 540.;
 		
+	
 		// prepare data for calibration
 		vector< vector< Point2f > > allCornersConcatenated;
 		vector< int > allIdsConcatenated;
@@ -255,9 +267,11 @@ int main(int argc, char *argv[]) {
 
 
 		// calibrate camera using aruco markers
+		
+#if 1
 		double arucoRepErr;
-		arucoRepErr = aruco::calibrateCameraAruco(allCornersConcatenated, allIdsConcatenated, markerCounterPerFrame, board, imgSize, cameraMatrix, distCoeffs, noArray(), noArray(), CV_CALIB_USE_INTRINSIC_GUESS);
-
+		arucoRepErr = aruco::calibrateCameraAruco(allCornersConcatenated, allIdsConcatenated, markerCounterPerFrame, board, imgSize, cameraMatrix, distCoeffs, noArray(), noArray(), calibrationFlags);
+#endif
 		// prepare data for charuco calibration
 		int nFrames = (int)allCorners.size();
 		vector< Mat > allCharucoCorners;
@@ -266,7 +280,7 @@ int main(int argc, char *argv[]) {
 		allCharucoCorners.reserve(nFrames);
 		allCharucoIds.reserve(nFrames);
 
-
+		
 		for (int i = 0; i < nFrames; i++) 
 		{
 			// interpolate using camera parameters
@@ -284,7 +298,7 @@ int main(int argc, char *argv[]) {
 			cerr << "Not enough corners for calibration" << endl;
 			return 0;
 		}
-
+		
 		// calibrate camera using charuco
 		repError = aruco::calibrateCameraCharuco(allCharucoCorners, allCharucoIds, charucoboard, imgSize, cameraMatrix, distCoeffs, rvecs, tvecs, calibrationFlags);
 
@@ -293,11 +307,11 @@ int main(int argc, char *argv[]) {
 			cerr << "Cannot save output file" << endl;
 			return 0;
 		}
-
+#if 1
 		cout << "Rep Error: " << repError << endl;
 		cout << "Rep Error Aruco: " << arucoRepErr << endl;
 		cout << "Calibration saved to " << FILENAME_CALIB << endl;
-
+#endif
 		// show interpolated charuco corners for debugging
 		if (SHOW_CHESSBOARD_CORNERS) {
 			for (unsigned int frame = 0; frame < filteredImages.size(); frame++) {
