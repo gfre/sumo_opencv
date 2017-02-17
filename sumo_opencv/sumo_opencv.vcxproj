@@ -152,15 +152,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="aruco_func.cpp" />
+    <ClCompile Include="arucoFunc.cpp" />
+    <ClCompile Include="fileOutput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="reconstruct3d.cpp" />
     <ClCompile Include="serial.cpp" />
     <ClCompile Include="stitcher.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aruco_func.h" />
+    <ClInclude Include="arucoFunc.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="fileOutput.h" />
     <ClInclude Include="reconstruct3d.h" />
     <ClInclude Include="serial.h" />
     <ClInclude Include="stitcher.h" />

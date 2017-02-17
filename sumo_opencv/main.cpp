@@ -18,10 +18,11 @@ Author: Nico Engel
 #include <math.h>
 /* PROJECT INCLUDES */
 #include "config.h"
-#include "aruco_func.h"
+#include "arucoFunc.h"
 #include "serial.h"
 #include "reconstruct3d.h"
 #include "stitcher.h"
+#include "fileOutput.h"
 
 /* NAMESPACES */
 using namespace std;
@@ -36,6 +37,10 @@ int main(int argc, char *argv[])
 	generateAruco();
 #endif
 
+#if CSV_REMOVE_AT_START
+	removeCSVFile();
+#endif
+
 	//Camera Parameter xml configuration file
 	string configFile = CALIB_FILE_NAME;
 
@@ -47,7 +52,6 @@ int main(int argc, char *argv[])
 		returnCode = ERR_INV_PARAM_FILE;
 	}
 	invCamMatrix = camMatrix.inv();
-	cout << distCoeffs << endl;
 
 #if PRINT_INTR_PARA
 	cout << "CamMatrix: " << camMatrix << endl;
@@ -120,9 +124,7 @@ int main(int argc, char *argv[])
 		map<int, Mat> marker, cornerBottomLeft;
 		map<int, Vec3d> markerTvecs;
 
-		// TODO : Improve Corner detection parameters
-		// http://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=houghlinesp#cornersubpix
-		// http://docs.opencv.org/3.1.0/d5/dae/tutorial_aruco_detection.html
+		// Corner detection parameters
 		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
 		param->doCornerRefinement = true;
 		param->cornerRefinementWinSize = 3;
@@ -156,8 +158,6 @@ int main(int argc, char *argv[])
 
 #if SERIAL_TRANSMIT
 				uint16 message[MAX_MSG_LENGTH];
-
-				
 
 				//Send Message to COM Port
 				sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));

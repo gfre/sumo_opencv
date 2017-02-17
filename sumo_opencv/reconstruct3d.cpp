@@ -3,9 +3,9 @@
 #include "opencv2\aruco.hpp"
 /* PROJECT INCLUDES */
 #include "config.h"
+#include "fileOutput.h"
 /* SYSTEM INCLUDES */
 #include <iostream>
-
 
 //Get World Coordinates (X,Y,Z) from Image Coordinates (u,v,1)
 int getWorldCoordinates(cv::Point2f uv, cv::Mat *xyz, cv::Mat invCamMatrix, cv::Mat invRotMatrix, cv::Vec3d tvec, double zConst) 
@@ -206,6 +206,15 @@ int getMarkerXYZ(std::vector<int> *markerIds, cv::Mat *imageDetected, int origin
 #if PRINT_WOLRD_COORDS 
 
 			std::cout << "Marker ID: " << (*markerIds)[i] << " (Dist: " << dist  << " mm) - X:" << (*marker_)[(*markerIds)[i]].at<double>(0, 0) << " Y: " << (*marker_)[(*markerIds)[i]].at<double>(1, 0) << " Z: " << xyzPoint.at<double>(2, 0) << std::endl;
+#endif
+
+#if PRINT_COORDS_TO_CSV
+
+#if CSV_SAVE_ID
+			writeCoordsToCSV(xyzPoint, (*markerIds)[i]);
+#else
+			writeCoordsToCSV(xyzPoint);
+#endif
 #endif
 
 		}

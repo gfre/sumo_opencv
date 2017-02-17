@@ -15,10 +15,18 @@
 
 #define PRINT_WOLRD_COORDS		(TRUE)										
 #define PRINT_UV_COORDS			(FALSE)
+#define PRINT_COORDS_TO_CSV		(TRUE)
 #define USE_REL_COORDS			(FALSE)
 #define PRINT_INTR_PARA         (FALSE)
 #define SHOW_FRAME_CENTER		(TRUE)
 #define SERIAL_READ_DATA		(FALSE)
+
+#define CSV_SAVE_ID				(FALSE)										//Set to true if id should be saved as well
+#define CSV_USE_COMMA			(TRUE)										//Use a comma as decimal separator 
+#define CSV_SEPARATOR			";"
+#define CSV_OUTPUT_FILENAME		"data.csv"
+#define CSV_REMOVE_AT_START		(TRUE)										//Set to true if old csv file should be removed at start 
+#define CSV_NO_ID				(-1)
 
 #define FIRST_CAM_ID			(1)											//ID of first camera
 #define SEC_CAM_ID				(2)											//ID of second camera
@@ -27,8 +35,8 @@
 #define MS_BETWEEN_FRAMES		(10)										//wait 10ms before grabbing new frame, may impact performance
 
 #define CALIB_FILE_NAME			"calibration_14distCoeffs.xml"
-#define ARUCO_DICT				(aruco::DICT_4X4_50) 
 
+#define ARUCO_DICT				(aruco::DICT_4X4_50) 
 #define MARKER_LENGTH			(119)										//Marker length in mm (98 - 150)
 #define MAX_NUMBER_OF_MARKERS	(4)											//How many markers/robots exist
 #define NUM_OF_VARIABLES		(3)											//How many variables per robot (x, y, phi)
@@ -44,6 +52,7 @@
 #define ERR_INV_PARAM_FILE		(1u)
 #define ERR_NO_ORIGIN			(2u)
 #define ERR_SERIAL_CONFIG		(3u)
+#define ERR_FILE_NOT_OPEN		(4u)
 #define VAR_INVALID				(0xFFEEu)									//Send this instead of coordinates if marker was not detected
 
 #define ERR_STR_NO_ORIGIN		"No Origin Marker detected"
