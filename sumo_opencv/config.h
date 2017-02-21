@@ -53,7 +53,8 @@
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
 #define CALIB_FILE_NAME						"camera_parameters/calibration_14distCoeffs.xml"
 
-
+/* SERIAL SETUP*/
+#define SERIAL_COM_PORT						"COM2"										//Select com port for serial transmission
 
 /* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)										//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS

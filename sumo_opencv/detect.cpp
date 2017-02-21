@@ -125,7 +125,7 @@ int detectMarkers()
 			Vec3d coordOrigin;
 			Mat xyzOrigin = Mat::ones(3, 1, DataType<double>::type);
 
-
+			// TODO: REMOVE ORIGIN MARKER RESTRICTION
 			if (ERR_OK != getOriginXYZ(&markerIds, &originIndex, &rvecs, &tvecs, &invCamMatrix, &markerCorners, &xyzOrigin))
 			{
 				putText(imageDetected, ERR_STR_NO_ORIGIN, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
@@ -136,22 +136,24 @@ int detectMarkers()
 				getMarkerXYZ(&markerIds, &imageDetected, originIndex, &rvecs, &tvecs, &invCamMatrix, &camMatrix, &distCoeffs, &markerCorners, &xyzOrigin, &marker, &cornerBottomLeft);
 
 #if PRINT_COORDS_TO_CSV
-
+				if ((markerIds.size() > 1))
+				{
 #if CSV_SAVE_ID
-				writeCoordsToCSV(marker[0], (*markerIds)[0]);
+					writeCoordsToCSV(marker[0], (*markerIds)[0]);
 #else
-				writeCoordsToCSV(marker[0], CSV_NO_ID);
+					writeCoordsToCSV(marker[0], CSV_NO_ID);
 #endif
+				}
 #endif
 
 
 #if SERIAL_TRANSMIT
-				uint16 message[MAX_MSG_LENGTH];
+				uint16_t message[MAX_MSG_LENGTH];
 
-				composeSerialMessage(&message, &marker, &cornerBottomLeft)
+				composeSerialMessage(message, &marker, &cornerBottomLeft);
 
 				//Send Message to COM Port
-				sendSerial("COM2", 255, message, sizeof(message) / sizeof(uint8_t));
+				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
 #endif
 #if PRINT_SERIAL_MSG_TO_CL && SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
