@@ -1,11 +1,18 @@
 #pragma once
-
-/* OPENCV INCLUDE */
-#include "opencv2\opencv.hpp"
 /* SYSTEM INCLUDES */
 #include <string>
-/* PROJECT INCLUDES */
-#include "config.h"
+/* PROJECT INCLUDE */
+#include "arucoFunc.h"
+#include "detect.h"
+#include "fileOutput.h"
+#include "reconstruct3d.h"
+#include "serial.h"
+#include "stitcher.h"
+
+/* OPENCV INCLUDES */
+#include "opencv2\opencv.hpp"
+#include "opencv2\opencv_modules.hpp"
+#include "opencv2\aruco.hpp"
 
 using namespace cv;
 using namespace std;
@@ -18,3 +25,6 @@ int readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs);
 
 //Function to generate Aruco Codes
 int generateAruco();
+
+//Function to calibrate Camera using Charuco Board
+int calibrateCamera();

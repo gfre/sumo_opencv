@@ -1,11 +1,13 @@
-/* SYSTEM INCLUDES */
-#include "opencv2\opencv.hpp"
-#include "opencv2\opencv_modules.hpp"
 #include "opencv2\xfeatures2d.hpp"
 /* SYSTEM INCLUDES */
 #include <iostream>
 /* PROJECT INCLUDES */
 #include "config.h"
+/* OPENCV INCLUDES */
+#include "opencv2\opencv.hpp"
+#include "opencv2\opencv_modules.hpp"
+#include "opencv2\aruco.hpp"
+
 
 using namespace cv;
 using namespace std;

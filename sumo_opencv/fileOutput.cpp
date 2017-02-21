@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <string>
 #include <locale>
+#include <time.h>
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
 
@@ -40,6 +41,8 @@ int writeCoordsToCSV(cv::Mat coordinates, int id=CSV_NO_ID)
 {
 	int errorCode = ERR_OK;
 
+	clock_t elapsedTime;
+
 	ofstream outputFile;
 
 	// Create File
@@ -52,16 +55,22 @@ int writeCoordsToCSV(cv::Mat coordinates, int id=CSV_NO_ID)
 	else {
 
 #if CSV_USE_COMMA
-		//Use comma as decimal divider
+		//Use comma as decimal separator
 		locale comma_locale(locale(), new CommaSeparator);
 		outputFile.imbue(comma_locale);
 #endif
-		if (CSV_NO_ID != id & CSV_SAVE_ID)
+		if ((CSV_NO_ID != id) & CSV_SAVE_ID)
 		{
 			outputFile << id;
 			outputFile << CSV_SEPARATOR;
 		}
 
+#if CSV_SAVE_TIME
+		elapsedTime = clock();
+		float seconds = (float)elapsedTime / CLOCKS_PER_SEC;
+		outputFile << seconds;
+		outputFile << CSV_SEPARATOR;
+#endif
 		outputFile << coordinates.at<double>(0, 0);
 		outputFile << CSV_SEPARATOR;
 		outputFile << coordinates.at<double>(1, 0);

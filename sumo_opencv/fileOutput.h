@@ -1,10 +1,12 @@
 #pragma once
+/* PROJECT INCLUDE */
+#include "config.h"
+
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
-/* SYSTEM INCLUDES */
-#include "config.h"
+#include "opencv2\opencv_modules.hpp"
 
 
 int removeCSVFile();
 
-int writeCoordsToCSV(cv::Mat coordinates, int id = CSV_NO_ID);
+int writeCoordsToCSV(cv::Mat coordinates, int id);

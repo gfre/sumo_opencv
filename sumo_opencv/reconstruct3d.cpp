@@ -208,19 +208,11 @@ int getMarkerXYZ(std::vector<int> *markerIds, cv::Mat *imageDetected, int origin
 			std::cout << "Marker ID: " << (*markerIds)[i] << " (Dist: " << dist  << " mm) - X:" << (*marker_)[(*markerIds)[i]].at<double>(0, 0) << " Y: " << (*marker_)[(*markerIds)[i]].at<double>(1, 0) << " Z: " << xyzPoint.at<double>(2, 0) << std::endl;
 #endif
 
-#if PRINT_COORDS_TO_CSV
 
-#if CSV_SAVE_ID
-			writeCoordsToCSV(xyzPoint, (*markerIds)[i]);
-#else
-			writeCoordsToCSV(xyzPoint);
-#endif
-#endif
 
 		}
 	}
 
 	return errorCode;
 }
-
 
