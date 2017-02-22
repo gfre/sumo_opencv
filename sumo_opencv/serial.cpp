@@ -113,30 +113,26 @@ int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byte
 
 }
 
-int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> *marker, map<int, cv::Mat> *cornerBottomLeft)
+int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int, double> &phi)
 {
 
 	int errorCode = ERR_OK;
 
 	for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 	{
-		if (!((*marker)[i]).empty())
+		if (!(marker[i].empty()))
 		{
 			//Marker with ID = i was detected
-
-			uint16_t phi = (uint16_t)((*marker)[i].at<double>(0, 0) - (*cornerBottomLeft)[i].at<double>(0, 0));
-
-			message_[3 * i] = (uint16_t)((*marker)[i].at<double>(0, 0)); // x - value
-			message_[3 * i + 1] = (uint16_t)((*marker)[i].at<double>(1, 0)); // y - value
-			message_[3 * i + 2] = phi; // phi - value
+			message_[3 * i]		= (uint16_t)(marker[i].at<double>(0, 0)); // x - value
+			message_[3 * i + 1]	= (uint16_t)(marker[i].at<double>(1, 0)); // y - value
+			message_[3 * i + 2]	= (uint16_t)(phi[i]);
 		}
 		else
 		{
 			//Marker with ID = i was NOT detected -> Transmit VAR_INVALID
-
-			message_[3 * i] = VAR_INVALID; // x - value
-			message_[3 * i + 1] = VAR_INVALID; // y - value
-			message_[3 * i + 2] = VAR_INVALID; // phi; // phi - value
+			message_[3 * i]		= VAR_INVALID; // x - value
+			message_[3 * i + 1]	= VAR_INVALID; // y - value
+			message_[3 * i + 2]	= VAR_INVALID; // phi; // phi - value
 		}
 	}
 

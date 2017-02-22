@@ -15,12 +15,14 @@
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 
-#define PRINT_WOLRD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 								
+#define PRINT_WOLRD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
+#define PRINT_ORIGIN_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
 #define PRINT_UV_COORDS						(FALSE)										//Print 2D Image Coordinates (u,v) to Command line
-#define PRINT_COORDS_TO_CSV					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
+#define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
 #define PRINT_INTR_PARA						(FALSE)										//Print intrinsic camera parameters
 #define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
+#define SHOW_FRAME_COORD_SYS				(TRUE)										//Show uv-coordinate system on image
 
 #define RECALCULATE_HOMOGRAPHY				(FALSE)										//Set to 1 if camera settings/position changed or Homography Matrix needs to be calculated again
 
