@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
 #include "opencv2\opencv_modules.hpp"
@@ -10,8 +11,10 @@
 #include "serial.h"
 #include "stitcher.h"
 #include "config.h"
+/* SYSTEM INCLUDES */
+#include <cmath>
 
-#define PI	(3.1415926535)
+
 
 int detectMarkers()
 {
@@ -61,7 +64,7 @@ int detectMarkers()
 #endif
 
 	//initialize Mat objects
-	Mat image1, image2, stitchedImage, imageDetected, rotMatrix, invRotMatrix, H;
+	Mat image1, image2, stitchedImage, imageDetected, H;
 
 #if RECALCULATE_HOMOGRAPHY
 	inputVideo1.retrieve(image1);
@@ -74,8 +77,8 @@ int detectMarkers()
 	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
 #endif
 
-	//Grab frames continuously
-	while (true)
+	//Grab frames continuously if at least one webcam is connected 
+	while (inputVideo1.grab() | inputVideo2.grab())
 	{
 		inputVideo1.retrieve(image1);
 
@@ -102,6 +105,7 @@ int detectMarkers()
 		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
 
+		//Initialize Variables
 		vector<int> markerIds;
 		vector<vector<Point2f>> markerCorners;
 		vector<Vec3d> rvecs, tvecs;
@@ -112,10 +116,10 @@ int detectMarkers()
 
 		// Corner detection parameters
 		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
-		param->doCornerRefinement = true;
-		param->cornerRefinementWinSize = 3;
-		param->cornerRefinementMaxIterations = 50;
-		param->cornerRefinementMinAccuracy = 0.1;
+		param->doCornerRefinement = CR_ENABLE;
+		param->cornerRefinementWinSize = CR_WIN_SIZE;
+		param->cornerRefinementMaxIterations = CR_MAX_ITERATIONS;
+		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
 
 		//Detect Markers
 		aruco::detectMarkers(imageDetected, dictionary, markerCorners, markerIds, param);
@@ -127,23 +131,36 @@ int detectMarkers()
 			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
 
 			//Check if the Origin Marker was detected
-			int originIndex = 0;
-
+			int originIndex = -1;
 			Vec3d coordOrigin;
 			Mat xyzOrigin = Mat::ones(3, 1, DataType<double>::type);
 
-			// TODO: REMOVE ORIGIN MARKER RESTRICTION
-			if (ERR_OK != getOriginXYZ(markerIds, originIndex, rvecs, tvecs, invCamMatrix, markerCorners, xyzOrigin))
+			if ((ERR_OK != getOriginXYZ(markerIds, originIndex, rvecs, tvecs, invCamMatrix, markerCorners, xyzOrigin)) & USE_REL_COORDS)
 			{
 				putText(imageDetected, ERR_STR_NO_ORIGIN, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 			}
 			else
 			{
-				//Get World Coordinates for all marker and save them in map "marker"
-				//marker[markerId] = xyzCoordinates of marker 
-				getMarkerXYZ(markerIds, imageDetected, originIndex, rvecs, tvecs, invCamMatrix, camMatrix, distCoeffs, markerCorners, xyzOrigin, marker);
-				//Get Euler Angles of rotation around z-Axis of each marker
-				getEulerAngleFromRotMatrix(rvecs, markerIds, phi, originIndex);
+				for (size_t i = 0; i < markerIds.size(); i++)
+				{
+					if (i != originIndex)
+					{
+						Mat rotMatrix;
+						Vec3d transl = tvecs[i];
+						Rodrigues(rvecs[i], rotMatrix);
+						Mat invRotMatrix = rotMatrix.inv();
+
+						//Draw Axis of detected marker
+						cv::aruco::drawAxis(imageDetected, camMatrix, distCoeffs, rvecs[i], transl, MARKER_LENGTH * 0.5f);
+
+						//Get World Coordinates for all marker and save them in map "marker"
+						//marker[markerId] = xyzCoordinates of marker 
+						getMarkerXYZ(markerIds[i], invRotMatrix, markerCorners[i], transl, invCamMatrix, marker, xyzOrigin);
+						//Get Euler Angles of rotation around z-Axis of each marker
+						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
+					}
+
+				}
 
 #if PRINT_WOLRD_COORDS
 
@@ -152,7 +169,7 @@ int detectMarkers()
 					if (i != originIndex)
 					{
 						std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
-						std::cout << " | Phi: " << phi[markerIds[i]]*180/PI << std::endl;
+						std::cout << " | Phi: " << phi[markerIds[i]]*180/M_PI << std::endl;
 					}
 				}
 #endif

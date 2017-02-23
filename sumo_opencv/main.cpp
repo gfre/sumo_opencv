@@ -16,8 +16,6 @@ using namespace cv;
 int main(int argc, char *argv[])
 {
 
-	int returnCode = ERR_OK;
-
 #if GENERATE_ARUCO_CODES == SUMO_OPENCV_MODE
 	generateAruco();
 #elif CALIBRATE_CAMERA == SUMO_OPENCV_MODE
@@ -26,6 +24,6 @@ int main(int argc, char *argv[])
 	detectMarkers();
 #endif
 
-	return returnCode;
+	return ERR_OK;
 
 }

@@ -54,6 +54,11 @@
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
 #define CALIB_FILE_NAME						"camera_parameters/calibration_14distCoeffs.xml"
+	//Corner Refinement
+#define CR_ENABLE							(true)
+#define CR_WIN_SIZE							(3)
+#define CR_MAX_ITERATIONS					(50)
+#define CR_MIN_ACCURACY						(0.1)
 
 /* SERIAL SETUP*/
 #define SERIAL_COM_PORT						"COM2"										//Select com port for serial transmission

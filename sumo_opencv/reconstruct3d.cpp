@@ -8,14 +8,11 @@
 #include <iostream>
 #include <cmath>
 
-#define PI	(3.1415926535)
-
-//Get Euler Angle in Radians from RotMatrix
-int getEulerAngleFromRotMatrix(std::vector<cv::Vec3d> &rvecs, std::vector<int> &markerIds, std::map<int, double> &zAngle_, int originIndex)
+//Get All Euler Angles in Radians from RotMatrix
+int getAllEulerAnglesFromRotMatrix(std::vector<cv::Vec3d> &rvecs, std::vector<int> &markerIds, std::map<int, double> &zAngle_, int originIndex)
 {
 	for (size_t i = 0; i < (markerIds.size()); i++)
 	{
-
 		if (i != originIndex)
 		{
 			double xAngle;
@@ -34,6 +31,22 @@ int getEulerAngleFromRotMatrix(std::vector<cv::Vec3d> &rvecs, std::vector<int> &
 		}
 
 	}
+
+	return ERR_OK;
+}
+
+//Get Euler Angle in Radians from RotMatrix
+int getEulerAngleFromRotMatrix(cv::Mat &rotMatrix, int &markerId, std::map<int, double> &zAngle_)
+{
+	double xAngle;
+	double sinX, cosX;
+
+	xAngle = atan2(rotMatrix.at<double>(2, 1), rotMatrix.at<double>(2, 2));
+
+	sinX = sin(xAngle);
+	cosX = cos(xAngle);
+
+	zAngle_[markerId] = atan2(sinX*rotMatrix.at<double>(0, 2) - cosX*rotMatrix.at<double>(0, 1), cosX*rotMatrix.at<double>(1, 1) - sinX*rotMatrix.at<double>(1, 2));
 
 	return ERR_OK;
 }
@@ -153,7 +166,7 @@ int getOriginXYZ(std::vector<int> &markerIds, int &originIndex_, std::vector<cv:
 }
 
 //Get World Coordinates (X,Y,Z) of all Markers
-int getMarkerXYZ(std::vector<int> &markerIds, cv::Mat &imageDetected, int originIndex, std::vector<cv::Vec3d> &rvecs, std::vector<cv::Vec3d> &tvecs, cv::Mat &invCamMatrix, cv::Mat &camMatrix, cv::Mat &distCoeffs, std::vector<std::vector<cv::Point2f>> &markerCorners, cv::Mat &xyzOrigin, std::map<int, cv::Mat> &marker_)
+int getAllMarkerXYZ(std::vector<int> &markerIds, cv::Mat &imageDetected, int originIndex, std::vector<cv::Vec3d> &rvecs, std::vector<cv::Vec3d> &tvecs, cv::Mat &invCamMatrix, cv::Mat &camMatrix, cv::Mat &distCoeffs, std::vector<std::vector<cv::Point2f>> &markerCorners, cv::Mat &xyzOrigin, std::map<int, cv::Mat> &marker_)
 {
 	int errorCode = ERR_OK;
 
@@ -200,7 +213,7 @@ int getMarkerXYZ(std::vector<int> &markerIds, cv::Mat &imageDetected, int origin
 			getWorldCoordinates(uvPoint, xyzPoint, invCamMatrix, invRotMatrix, tvecs[i], Z_CONST);
 			
 #if USE_REL_COORDS
-			double dist = cv::norm(*xyzOrigin, xyzPoint, cv::NORM_L2);
+			double dist = cv::norm(xyzOrigin, xyzPoint, cv::NORM_L2);
 			//Get Relative Coordinates (with Coordinate Origin at OriginMarker Top Left Corner)
 			xyzPoint.at<double>(0, 0) -= xyzOrigin.at<double>(0, 0);	// rel. x-Coordinate
 			xyzPoint.at<double>(1, 0) -= xyzOrigin.at<double>(1, 0);	// rel. y-Coordinate
@@ -213,5 +226,50 @@ int getMarkerXYZ(std::vector<int> &markerIds, cv::Mat &imageDetected, int origin
 	}
 
 	return errorCode;
+}
+
+//Get World Coordinates (X,Y,Z) of one marker
+int getMarkerXYZ(int markerId, cv::Mat &invRotMatrix, std::vector<cv::Point2f> &markerCorners, cv::Vec3d &transl, cv::Mat &invCamMatrix, std::map<int, cv::Mat> &marker_, cv::Mat &xyzOrigin)
+{
+	int errorCode = ERR_OK;
+
+	cv::Mat xyzPoint = cv::Mat::ones(3, 1, cv::DataType<double>::type);
+	cv::Point2f uvPoint;
+
+
+#if SHIFT_POINT_TO_CENTER
+	//Calculate Center using moments
+	cv::Moments mu = cv::moments(markerCorners);
+	uvPoint = cv::Point2d(mu.m10 / mu.m00, mu.m01 / mu.m00);
+#else
+	//Use top left corner
+	uvPoint.x = markerCorners[0].x;
+	uvPoint.y = markerCorners[0].y;
+#endif
+
+#if PRINT_UV_COORDS 
+	std::cout << "ID: " << markerId << std::endl;
+	std::cout << "------------------------------------------" << std::endl;
+	std::cout << "U: " << uvPoint.x << " V: " << uvPoint.y << std::endl;
+	std::cout << "invRotMatrix: " << invRotMatrix << std::endl;
+	std::cout << "Transl: " << transl << std::endl;
+
+	std::cout << "============================================" << std::endl << std::endl << std::endl;
+#endif
+
+
+	getWorldCoordinates(uvPoint, xyzPoint, invCamMatrix, invRotMatrix, transl, Z_CONST);
+
+#if USE_REL_COORDS
+	double dist = cv::norm(xyzOrigin, xyzPoint, cv::NORM_L2);
+
+	xyzPoint.at<double>(0, 0) -= xyzOrigin.at<double>(0, 0);	// rel. x-Coordinate
+	xyzPoint.at<double>(1, 0) -= xyzOrigin.at<double>(1, 0);	// rel. y-Coordinate
+
+#endif
+
+	marker_[markerId] = xyzPoint;
+
+return errorCode;
 }
 
