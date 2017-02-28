@@ -14,8 +14,6 @@
 /* SYSTEM INCLUDES */
 #include <cmath>
 
-
-
 int detectMarkers()
 {
 	int returnCode = ERR_OK;
@@ -94,15 +92,6 @@ int detectMarkers()
 #if UNDISTORT_IMAGE
 		Mat imageUndistorted;
 		undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
-#endif
-
-#if SHOW_FRAME_CENTER
-		circle(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
-#endif
-
-#if SHOW_FRAME_COORD_SYS
-		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
-		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
 
 		//Initialize Variables
@@ -195,11 +184,11 @@ int detectMarkers()
 				//Send Message to COM Port
 				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
 #endif
-#if PRINT_SERIAL_MSG_TO_CL && SERIAL_TRANSMIT
+#if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT | 1
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
-					if (!marker[i].empty())
-						cout << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
+					//if (!marker[i].empty())
+						cout << "ID = " << i << " || x = " << (uint16_t)message[3 * i] << " | y = " << (uint16_t)message[3 * i + 1] << " | phi = " << (uint16_t)message[3 * i + 2] << endl;
 				}
 #endif
 			}
@@ -208,6 +197,16 @@ int detectMarkers()
 		{
 			putText(imageDetected, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
+
+
+#if SHOW_FRAME_CENTER
+		circle(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
+#endif
+
+#if SHOW_FRAME_COORD_SYS
+		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
+		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
+#endif
 
 #if SHOW_FINAL_IMAGE
 		//Draw image

@@ -26,7 +26,7 @@
 
 #define RECALCULATE_HOMOGRAPHY				(FALSE)										//Set to 1 if camera settings/position changed or Homography Matrix needs to be calculated again
 
-#define SERIAL_TRANSMIT						(FALSE)										//Enable/Disable Serial Transmission
+#define SERIAL_TRANSMIT						(TRUE)										//Enable/Disable Serial Transmission
 #define SERIAL_READ_DATA					(FALSE)										//READ Data from Serial
 #define PRINT_SERIAL_MSG_TO_CL				(FALSE)										//Print the Serial Message to Command Line
 
@@ -48,7 +48,7 @@
 
 /* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary
-#define MARKER_LENGTH						(119)										//Marker length in mm (98 - 150)
+#define MARKER_LENGTH						(100)										//Marker length in mm (98 - 150)
 #define MAX_NUMBER_OF_MARKERS				(4)											//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))

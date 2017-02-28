@@ -59,8 +59,8 @@ int generateAruco()
 		https://www.blitzrechner.de/pixel-zentimeter-umrechnen/
 		@300dpi - 118px/cm
 		*/
-		int sizeInPixel = 1772;	// = 15cm @ 300dpi
-		int borderBits = 2;
+		int sizeInPixel = 1181;	// = 15cm @ 300dpi
+		int borderBits = 1;
 
 		fileName = to_string(i);
 		fileFormat = ".png";
