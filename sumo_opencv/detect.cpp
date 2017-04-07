@@ -14,6 +14,10 @@
 /* SYSTEM INCLUDES */
 #include <cmath>
 
+
+/* GLOBAL VARIABLES */
+static string startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
+
 int detectMarkers()
 {
 	int returnCode = ERR_OK;
@@ -184,7 +188,7 @@ int detectMarkers()
 				//Send Message to COM Port
 				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
 #endif
-#if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT | 1
+#if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
 					//if (!marker[i].empty())
@@ -208,20 +212,47 @@ int detectMarkers()
 		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
 
+		//End loop by pressing "e"
+		char c = waitKey(MS_BETWEEN_FRAMES);
+		if (101 == c || 69 == c)
+		{
+			break;
+		}
+
+		//Send start message by pressing "s"
+		if (115 == c || 83 == c)
+		{
+			startStopMsg = "Current State : RUNNING - Press 'i' to STOP Sumos";
+			
+			uint16_t message = VAR_START;
+
+			//Send Message to COM Port
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			cout << "START" << endl;
+		}
+
+		//Send stop message by pressing "i"
+		if (105 == c || 73 == c)
+		{
+			startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
+			
+			//Send Message to COM Port
+			//sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
+			cout << "STOP" << endl;
+		}
+
+		String exitMsg = "Press 'e' to exit";
+		putText(imageDetected, startStopMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, exitMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+
 #if SHOW_FINAL_IMAGE
 		//Draw image
 		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 		imshow("Detected Markers", imageDetected);
 #endif
 
-		//End loop by pressing "c"
-		char c = waitKey(MS_BETWEEN_FRAMES);
-		if (67 == c || 99 == c)
-		{
-			break;
-		}
 
-	}
+}
 
 	inputVideo1.release();
 

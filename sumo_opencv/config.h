@@ -3,9 +3,9 @@
 
 
 /* ENABLE FEATURES */
-#define GENERATE_ARUCO_CODES				(0x01u)		//Generate and save Aruco Marker
-#define CALIBRATE_CAMERA					(0x02u)
-#define DETECT_MARKERS						(0x04u)
+#define GENERATE_ARUCO_CODES				(0x01u)										//Generate and save Aruco Marker
+#define CALIBRATE_CAMERA					(0x02u)										//Calibrate Camera
+#define DETECT_MARKERS						(0x04u)										//Detect Markers
 
 #define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
@@ -49,7 +49,7 @@
 /* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary
 #define MARKER_LENGTH						(100)										//Marker length in mm (98 - 150)
-#define MAX_NUMBER_OF_MARKERS				(4)											//How many markers/robots exist
+#define MAX_NUMBER_OF_MARKERS				(8)											//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
@@ -65,12 +65,12 @@
 
 /* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)										//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
-#define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_FIX_ASPECT_RATIO)									//(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_THIN_PRISM_MODEL | CV_CALIB_TILTED_MODEL)
+#define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_FIX_ASPECT_RATIO)		//(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_THIN_PRISM_MODEL | CV_CALIB_TILTED_MODEL)
 #define CHARUCO_CAM_ID						(1)											//Select which camera to calibrate
 #define CHARUCO_NUM_SQUARES_X				(4)
 #define CHARUCO_NUM_SQUARES_Y				(6)
-#define CHARUCO_SQUARE_LENGTH				(397*0+0.14)								//Charuco Board square length in pixel
-#define CHARUCO_MARKER_LENGTH				(283*0+0.1)									//Charuco Board marker length in pixel
+#define CHARUCO_SQUARE_LENGTH				(397*0)										//Charuco Board square length in pixel
+#define CHARUCO_MARKER_LENGTH				(283*0)										//Charuco Board marker length in pixel
 #define CHARUCO_SQUARE_LENGTH_M				(0.12165)									//Charuco Board square length in meter
 #define CHARUCO_MARKER_LENGTH_M				(0.09405)									//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1550)										//Intrinsic guess of focal length
@@ -98,6 +98,8 @@
 #define CHARUCO_ERR_CALIB_FILE				(7u)
 
 #define VAR_INVALID							(0xFFEEu)									//Send this instead of coordinates if marker was not detected
+#define VAR_START							(0xEEEEu)									//START Message Code
+#define VAR_STOP							(0xEEFFu)									//STOP Message Code
 
 #define ERR_STR_NO_ORIGIN					"No Origin Marker detected"
 #define ERR_STR_NO_MARKER					"No Marker detected"
