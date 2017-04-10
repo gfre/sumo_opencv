@@ -17,6 +17,7 @@
 
 /* GLOBAL VARIABLES */
 static string startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
+static sendState_t sendState = STATE_IDLE;
 
 int detectMarkers()
 {
@@ -181,12 +182,16 @@ int detectMarkers()
 
 
 #if SERIAL_TRANSMIT
-				uint16_t message[MAX_MSG_LENGTH];
+				if (STATE_RUN == sendState)
+				{
+					uint16_t message[MAX_MSG_LENGTH];
 
-				composeSerialMessage(message, marker, phi);
+					composeSerialMessage(message, marker, phi);
 
-				//Send Message to COM Port
-				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
+					//Send Message to COM Port
+					sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
+				}
+
 #endif
 #if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
@@ -225,6 +230,7 @@ int detectMarkers()
 			startStopMsg = "Current State : RUNNING - Press 'i' to STOP Sumos";
 			
 			uint16_t message = VAR_START;
+			sendState = STATE_RUN;
 
 			//Send Message to COM Port
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
@@ -235,9 +241,12 @@ int detectMarkers()
 		if (105 == c || 73 == c)
 		{
 			startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
-			
+			sendState = STATE_IDLE;
+
+			uint16_t message = VAR_STOP;
+
 			//Send Message to COM Port
-			//sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "STOP" << endl;
 		}
 

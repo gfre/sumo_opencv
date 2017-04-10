@@ -97,9 +97,9 @@
 #define CHARUCO_ERR_NOT_ENOUGH_CORNERS		(6u)
 #define CHARUCO_ERR_CALIB_FILE				(7u)
 
-#define VAR_INVALID							(0xFFEEu)									//Send this instead of coordinates if marker was not detected
+#define VAR_INVALID							(0xFFFFu)									//Send this instead of coordinates if marker was not detected
 #define VAR_START							(0xEEEEu)									//START Message Code
-#define VAR_STOP							(0xEEFFu)									//STOP Message Code
+#define VAR_STOP							(0xFFEEu)									//STOP Message Code
 
 #define ERR_STR_NO_ORIGIN					"No Origin Marker detected"
 #define ERR_STR_NO_MARKER					"No Marker detected"
