@@ -16,7 +16,7 @@
 
 
 /* GLOBAL VARIABLES */
-static string startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
+String currentMsg = "IDLE";
 static sendState_t sendState = STATE_IDLE;
 
 int detectMarkers()
@@ -131,7 +131,7 @@ int detectMarkers()
 
 			if ((ERR_OK != getOriginXYZ(markerIds, originIndex, rvecs, tvecs, invCamMatrix, markerCorners, xyzOrigin)) & USE_REL_COORDS)
 			{
-				putText(imageDetected, ERR_STR_NO_ORIGIN, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
+				putText(imageDetected, ERR_STR_NO_ORIGIN, Point(800, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 			}
 			else
 			{
@@ -182,15 +182,14 @@ int detectMarkers()
 
 
 #if SERIAL_TRANSMIT
-				if (STATE_RUN == sendState)
-				{
+
 					uint16_t message[MAX_MSG_LENGTH];
 
 					composeSerialMessage(message, marker, phi);
 
 					//Send Message to COM Port
 					sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
-				}
+
 
 #endif
 #if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
@@ -224,13 +223,24 @@ int detectMarkers()
 			break;
 		}
 
+		//Send start message by pressing "r"
+		if (114 == c || 82 == c)
+		{
+			uint16_t message = VAR_READY;
+			sendState = STATE_READY;
+			currentMsg = "READY";
+
+			//Send Message to COM Port
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			cout << "READY" << endl;
+		}
+
 		//Send start message by pressing "s"
 		if (115 == c || 83 == c)
-		{
-			startStopMsg = "Current State : RUNNING - Press 'i' to STOP Sumos";
-			
+		{			
 			uint16_t message = VAR_START;
 			sendState = STATE_RUN;
+			currentMsg = "START";
 
 			//Send Message to COM Port
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
@@ -240,19 +250,31 @@ int detectMarkers()
 		//Send stop message by pressing "i"
 		if (105 == c || 73 == c)
 		{
-			startStopMsg = "Current State : IDLE - Press 's' to START Sumos";
 			sendState = STATE_IDLE;
-
 			uint16_t message = VAR_STOP;
+			currentMsg = "IDLE";
 
 			//Send Message to COM Port
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "STOP" << endl;
 		}
 
-		String exitMsg = "Press 'e' to exit";
-		putText(imageDetected, startStopMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageDetected, exitMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+
+		/* Show Config Messages on the Screen */
+		String readyMsg = "Press 'r' to enter READY";
+		String startMsg = "Press 's' to START";
+		String stopMsg	= "Press 'i' to reset to IDLE";
+		String exitMsg	= "Press 'e' to EXIT Program";
+		
+
+		putText(imageDetected, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, stopMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+
+		putText(imageDetected, exitMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+
+		putText(imageDetected, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
 #if SHOW_FINAL_IMAGE
 		//Draw image

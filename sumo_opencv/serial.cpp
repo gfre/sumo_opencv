@@ -125,7 +125,17 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 		if (!(marker[i].empty()))
 		{
 			//Marker with ID = i was detected
-			message_[3 * i]		= (uint16_t)(marker[i].at<double>(0, 0));	// x - value
+
+			//Check if Marker Coordinates conflict with Stop Message
+			if (marker[i].at<double>(0, 0) == VAR_STOP)
+			{
+				message_[3 * i] = (uint16_t)((marker[i].at<double>(0, 0)) - 1);	// x - value
+			}
+			else
+			{
+				message_[3 * i] = (uint16_t)(marker[i].at<double>(0, 0));	// x - value
+			}
+						
 			message_[3 * i + 1]	= (uint16_t)(marker[i].at<double>(1, 0));	// y - value
 			message_[3 * i + 2]	= (uint16_t)(phi[i]*180/M_PI);						// phi - value
 		}

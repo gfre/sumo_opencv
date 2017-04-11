@@ -3,6 +3,7 @@
 typedef enum sendState_e
 {
 	 STATE_IDLE = 0x00
+	,STATE_READY
 	,STATE_RUN
 	,STATE_ERROR
 
