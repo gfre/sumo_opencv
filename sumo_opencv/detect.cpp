@@ -156,7 +156,7 @@ int detectMarkers()
 
 				}
 
-#if PRINT_WOLRD_COORDS
+#if PRINT_WOLRD_COORDS && 0
 
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{

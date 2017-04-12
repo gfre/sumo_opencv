@@ -5,11 +5,19 @@
 #include <iostream>
 #include <stdio.h>
 #include <cmath>
+#include <map>
+#include <vector>
 /* PROJECT INCLUDES */
 #include "config.h"
 #include "opencv2\opencv.hpp"
 
 using namespace std;
+
+/* GLOBAL VARIABLES */
+static map <int, int> mvgAvgIndex;
+static map <int, int> mvgAvgIter;
+static map<int, map<int, cv::Mat> > markerMvgAvg;
+static map<int, map<int, double> >  phiMvgAvg;
 
 //Send data via serial communication port
 int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byteSize)
@@ -117,27 +125,63 @@ int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byte
 
 int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int, double> &phi)
 {
-
 	int errorCode = ERR_OK;
 
 	for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 	{
+		
 		if (!(marker[i].empty()))
-		{
+		{		
+			if (mvgAvgIndex.empty())
+			{
+				for (int j = 0; j < MAX_NUMBER_OF_MARKERS; j++)
+				{
+					mvgAvgIndex[j] = 0;
+					mvgAvgIter[j]  = 0;
+				}
+			}
+
+			/* moving average implementation */
+			markerMvgAvg[mvgAvgIndex[i]][i] = marker[i];
+			phiMvgAvg[mvgAvgIndex[i]][i] = phi[i];
+			
+			mvgAvgIndex[i] = (mvgAvgIndex[i] + 1) % MOVING_AVG_SAMPLES;
+			mvgAvgIter[i]++;
+
 			//Marker with ID = i was detected
 
-			//Check if Marker Coordinates conflict with Stop Message
-			if (marker[i].at<double>(0, 0) == VAR_STOP)
+			if (MOVING_AVG_SAMPLES <= mvgAvgIter[i])
 			{
-				message_[3 * i] = (uint16_t)((marker[i].at<double>(0, 0)) - 1);	// x - value
+				double xAvg		= 0.0;
+				double yAvg		= 0.0;
+				double phiAvg	= 0.0;
+
+				for (int j = 0; j < MOVING_AVG_SAMPLES; j++)
+				{
+					xAvg	+= markerMvgAvg[j][i].at<double>(0, 0);
+					yAvg	+= markerMvgAvg[j][i].at<double>(1, 0);
+					phiAvg	+= phiMvgAvg[j][i];
+				}
+
+				xAvg	= xAvg / (double)MOVING_AVG_SAMPLES;
+				yAvg	= yAvg / (double)MOVING_AVG_SAMPLES;
+				phiAvg	= phiAvg / (double)MOVING_AVG_SAMPLES * 180.0 / M_PI;
+
+				cout << "X: " << xAvg << " - Y: " << yAvg << " - phi: " << phiAvg << endl;
+
+				message_[3 * i]		= (uint16_t)(xAvg);				// x - value
+				message_[3 * i + 1] = (uint16_t)(yAvg);				// y - value
+				message_[3 * i + 2] = (uint16_t)(phiAvg);			// phi - value
+
 			}
 			else
 			{
-				message_[3 * i] = (uint16_t)(marker[i].at<double>(0, 0));	// x - value
+				//Not enough samples
+				message_[3 * i]		= VAR_INVALID;								// x - value
+				message_[3 * i + 1] = VAR_INVALID;								// y - value
+				message_[3 * i + 2] = VAR_INVALID;								// phi - val
 			}
-						
-			message_[3 * i + 1]	= (uint16_t)(marker[i].at<double>(1, 0));	// y - value
-			message_[3 * i + 2]	= (uint16_t)(phi[i]*180/M_PI);						// phi - value
+			
 		}
 		else
 		{
@@ -146,6 +190,8 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 			message_[3 * i + 1]	= VAR_INVALID; // y - value
 			message_[3 * i + 2]	= VAR_INVALID; // phi - value
 		}
+
+		
 	}
 
 	return errorCode;

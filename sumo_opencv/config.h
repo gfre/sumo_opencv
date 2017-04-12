@@ -85,6 +85,8 @@
 #define MIN_HESSIAN							(500)										//Minimum Hessian threshold for SURF Algorithm
 #define Z_CONST								(3200)										//Distance from Camera to Marker Plane in mm (3150-3250)
 #define HOMOGRAPHY_M						0.9568005531058007, 0.001879261708537507, 488.6830366627206, -0.02376243394348695, 0.9520233532133866, 17.3904366427672, -5.302341910721238e-06, -2.612583953997515e-05, 1
+#define MOVING_AVG_SAMPLES					(4)											// Amount of measurements used in Moving Average
+
 
 /* ERROR CODES */
 #define ERR_OK								(0u)	
