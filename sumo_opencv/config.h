@@ -103,6 +103,7 @@
 #define VAR_START							(0xAAAAu)									//START Message Code
 #define VAR_STOP							(0xBBAAu)									//STOP Message Code
 #define VAR_READY							(0xCCAAu)									//READY Message Code
+#define VAR_TRANS							(0xDDAAu)									//start next TRANSITION MSG Code
 
 #define ERR_STR_NO_ORIGIN					"No Origin Marker detected"
 #define ERR_STR_NO_MARKER					"No Marker detected"

@@ -259,19 +259,31 @@ int detectMarkers()
 			cout << "STOP" << endl;
 		}
 
+		//Next Transition message by pressing "t"
+		if (116 == c || 84 == c)
+		{
+			uint16_t message = VAR_TRANS;
+
+			//Send Message to COM Port
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			cout << "Start Next Transition" << endl;
+		}
+
 
 		/* Show Config Messages on the Screen */
 		String readyMsg = "Press 'r' to enter READY";
 		String startMsg = "Press 's' to START";
 		String stopMsg	= "Press 'i' to reset to IDLE";
+		String transMsg = "Press 't' to start next Transition";
 		String exitMsg	= "Press 'e' to EXIT Program";
 		
 
 		putText(imageDetected, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		putText(imageDetected, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		putText(imageDetected, stopMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, transMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
-		putText(imageDetected, exitMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, exitMsg, Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
 		putText(imageDetected, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		putText(imageDetected, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
