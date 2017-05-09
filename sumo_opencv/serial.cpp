@@ -132,6 +132,9 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 		
 		if (!(marker[i].empty()))
 		{		
+			
+			
+		
 			if (mvgAvgIndex.empty())
 			{
 				for (int j = 0; j < MAX_NUMBER_OF_MARKERS; j++)
@@ -158,16 +161,17 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 
 				for (int j = 0; j < MOVING_AVG_SAMPLES; j++)
 				{
-					xAvg	+= markerMvgAvg[j][i].at<double>(0, 0);
-					yAvg	+= markerMvgAvg[j][i].at<double>(1, 0);
-					phiAvg	+= phiMvgAvg[j][i];
+					double x = markerMvgAvg[j][i].at<double>(0, 0);
+					double y = markerMvgAvg[j][i].at<double>(1, 0);
+
+					xAvg += x;
+					yAvg += y;
+					phiAvg += phiMvgAvg[j][i];
 				}
 
 				xAvg	= xAvg / (double)MOVING_AVG_SAMPLES;
 				yAvg	= yAvg / (double)MOVING_AVG_SAMPLES;
 				phiAvg	= phiAvg / (double)MOVING_AVG_SAMPLES * 180.0 / M_PI;
-
-				cout << "X: " << xAvg << " - Y: " << yAvg << " - phi: " << phiAvg << endl;
 
 				message_[3 * i]		= (uint16_t)(xAvg);				// x - value
 				message_[3 * i + 1] = (uint16_t)(yAvg);				// y - value
@@ -181,7 +185,6 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 				message_[3 * i + 1] = VAR_INVALID;								// y - value
 				message_[3 * i + 2] = VAR_INVALID;								// phi - val
 			}
-			
 		}
 		else
 		{

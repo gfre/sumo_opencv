@@ -14,6 +14,7 @@
 #define USE_STITCHER						(FALSE)										//Use 2 camera feeds and stitch images together
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
+#define ENABLE_REC							(TRUE)
 
 #define PRINT_WOLRD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_ORIGIN_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 

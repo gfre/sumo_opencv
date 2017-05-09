@@ -92,6 +92,7 @@ int getWorldCoordinates(cv::Point2f uv, cv::Mat &xyz, cv::Mat invCamMatrix, cv::
 #endif
 
 
+
 #if 0
 	std::cout << "uv: " << uv.x << "  " << uv.y << std::endl;
 	std::cout << "t: " << t << std::endl;
@@ -267,6 +268,7 @@ int getMarkerXYZ(int markerId, cv::Mat &invRotMatrix, std::vector<cv::Point2f> &
 	xyzPoint.at<double>(1, 0) -= xyzOrigin.at<double>(1, 0);	// rel. y-Coordinate
 
 #endif
+
 
 	marker_[markerId] = xyzPoint;
 

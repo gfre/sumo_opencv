@@ -9,4 +9,10 @@ typedef enum sendState_e
 
 } sendState_t;
 
+typedef enum recState_e
+{
+	NO_REC = 0x00
+	, REC
+} recState_t;
+
 int detectMarkers();

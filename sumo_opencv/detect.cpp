@@ -17,7 +17,9 @@
 
 /* GLOBAL VARIABLES */
 String currentMsg = "IDLE";
+String recMsg = "";
 static sendState_t sendState = STATE_IDLE;
+static recState_t recState = NO_REC;
 
 int detectMarkers()
 {
@@ -80,10 +82,40 @@ int detectMarkers()
 	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
 #endif
 
+#if ENABLE_REC
+	//Initialize Videowriter
+	VideoWriter vidWriter;
+
+	int codec = CV_FOURCC('M', 'J', 'P', 'G');
+	double fps = 25.0;
+	string vidFilename = "rec.avi";
+	Mat vidSizeImg;
+	//Save on image to get size
+	inputVideo1 >> vidSizeImg;
+	bool isColor = (vidSizeImg.type() == CV_8UC3);
+
+	vidWriter.open(vidFilename, codec, fps, vidSizeImg.size(), isColor);
+
+	if (!vidWriter.isOpened()) {
+		cerr << "Could not open the output video file for write\n";
+	}
+
+#endif
+
+
 	//Grab frames continuously if at least one webcam is connected 
 	while (inputVideo1.grab() | inputVideo2.grab())
 	{
+
 		inputVideo1.retrieve(image1);
+
+
+#if ENABLE_REC
+		if (recState == REC)
+		{
+			vidWriter.write(image1);
+		}
+#endif
 
 #if USE_STITCHER
 		inputVideo2.retrieve(image2);
@@ -156,7 +188,7 @@ int detectMarkers()
 
 				}
 
-#if PRINT_WOLRD_COORDS && 0
+#if PRINT_WOLRD_COORDS 
 
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{
@@ -269,6 +301,24 @@ int detectMarkers()
 			cout << "Start Next Transition" << endl;
 		}
 
+#if ENABLE_REC
+		//record by pressing "w"
+		if (119 == c || 87 == c)
+		{
+			if (recState == NO_REC)
+			{
+				recState = REC;
+				recMsg = "RECORDING...";
+			}
+			else
+			{
+				recState = NO_REC;
+				recMsg = "";
+				vidWriter.release();
+			}
+		}
+#endif
+
 
 		/* Show Config Messages on the Screen */
 		String readyMsg = "Press 'r' to enter READY";
@@ -288,12 +338,13 @@ int detectMarkers()
 		putText(imageDetected, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		putText(imageDetected, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
+		putText(imageDetected, recMsg, Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+
 #if SHOW_FINAL_IMAGE
 		//Draw image
 		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 		imshow("Detected Markers", imageDetected);
 #endif
-
 
 }
 
