@@ -11,7 +11,7 @@
 
 #define ROTATE_FIRST						(FALSE)										//Camera Pinhole Model: Rotate First translate second or other way round
 #define SHIFT_POINT_TO_CENTER				(TRUE)										//Use center Point of Aruco for localization instead of Top Left Corner
-#define USE_STITCHER						(FALSE)										//Use 2 camera feeds and stitch images together
+#define USE_STITCHER						(TRUE)										//Use 2 camera feeds and stitch images together
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 #define ENABLE_REC							(TRUE)
@@ -85,7 +85,7 @@
 /* CONSTANTS */
 #define MIN_HESSIAN							(500)										//Minimum Hessian threshold for SURF Algorithm
 #define Z_CONST								(3200)										//Distance from Camera to Marker Plane in mm (3150-3250)
-#define HOMOGRAPHY_M						0.9568005531058007, 0.001879261708537507, 488.6830366627206, -0.02376243394348695, 0.9520233532133866, 17.3904366427672, -5.302341910721238e-06, -2.612583953997515e-05, 1
+#define HOMOGRAPHY_M						0.9481264903687447, -0.0006128029844869035, 812.8437136026427, -0.02500129918606342, 0.9849352009158311, -11.38559156880517, -2.279974889196073e-05, -6.30028688917313e-06, 1
 #define MOVING_AVG_SAMPLES					(4)											// Amount of measurements used in Moving Average
 
 

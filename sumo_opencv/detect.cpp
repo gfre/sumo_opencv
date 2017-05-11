@@ -74,9 +74,9 @@ int detectMarkers()
 #if RECALCULATE_HOMOGRAPHY
 	inputVideo1.retrieve(image1);
 	inputVideo2.retrieve(image2);
-	getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, false);
+	getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, true);
 	// Print new Homography Matrix for saving
-	//cout << H;
+	cout << H;
 #else
 	// Use "old" Homography Matrix
 	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
@@ -266,7 +266,7 @@ int detectMarkers()
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "READY" << endl;
 		}
-
+#if 0
 		//Send start message by pressing "s"
 		if (115 == c || 83 == c)
 		{			
@@ -279,6 +279,7 @@ int detectMarkers()
 			cout << "START" << endl;
 		}
 
+#endif
 		//Send stop message by pressing "i"
 		if (105 == c || 73 == c)
 		{
@@ -322,18 +323,18 @@ int detectMarkers()
 
 		/* Show Config Messages on the Screen */
 		String readyMsg = "Press 'r' to enter READY";
-		String startMsg = "Press 's' to START";
+		//String startMsg = "Press 's' to START";
 		String stopMsg	= "Press 'i' to reset to IDLE";
 		String transMsg = "Press 't' to start next Transition";
 		String exitMsg	= "Press 'e' to EXIT Program";
 		
 
 		putText(imageDetected, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageDetected, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageDetected, stopMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageDetected, transMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		//putText(imageDetected, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, stopMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, transMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
-		putText(imageDetected, exitMsg, Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, exitMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
 		putText(imageDetected, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		putText(imageDetected, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
