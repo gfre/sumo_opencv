@@ -43,18 +43,18 @@
 /* CAMERA SETUP */
 #define FIRST_CAM_ID						(1)											//ID of first camera
 #define SEC_CAM_ID							(2)											//ID of second camera
-#define FRAME_WIDTH							(1920)										//Camera image width
-#define FRAME_HEIGHT						(1080)										//Camera image height
+#define FRAME_WIDTH							(1900)										//Camera image width
+#define FRAME_HEIGHT						(1900)										//Camera image height
 #define MS_BETWEEN_FRAMES					(10)										//wait 10ms before grabbing new frame, may impact performance
 
 /* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary
 #define MARKER_LENGTH						(100)										//Marker length in mm (98 - 150)
-#define MAX_NUMBER_OF_MARKERS				(8)											//How many markers/robots exist
+#define MAX_NUMBER_OF_MARKERS				(12)											//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
-#define CALIB_FILE_NAME						"camera_parameters/calibration_14distCoeffs.xml"
+#define CALIB_FILE_NAME						"camera_parameters/calibration_stitched.xml"
 	//Corner Refinement
 #define CR_ENABLE							(true)
 #define CR_WIN_SIZE							(3)
@@ -70,13 +70,13 @@
 #define CHARUCO_CAM_ID						(1)											//Select which camera to calibrate
 #define CHARUCO_NUM_SQUARES_X				(4)
 #define CHARUCO_NUM_SQUARES_Y				(6)
-#define CHARUCO_SQUARE_LENGTH				(397*0)										//Charuco Board square length in pixel
-#define CHARUCO_MARKER_LENGTH				(283*0)										//Charuco Board marker length in pixel
+#define CHARUCO_SQUARE_LENGTH				(397)										//Charuco Board square length in pixel
+#define CHARUCO_MARKER_LENGTH				(283)										//Charuco Board marker length in pixel
 #define CHARUCO_SQUARE_LENGTH_M				(0.12165)									//Charuco Board square length in meter
 #define CHARUCO_MARKER_LENGTH_M				(0.09405)									//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1550)										//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)										//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/calib_door_8.xml"		//Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_stitched.xml"//Name of output file of generated calibration parameters
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)										//Show detected Charuco Corners on Image
@@ -86,7 +86,7 @@
 #define MIN_HESSIAN							(500)										//Minimum Hessian threshold for SURF Algorithm
 #define Z_CONST								(3200)										//Distance from Camera to Marker Plane in mm (3150-3250)
 #define HOMOGRAPHY_M						0.9481264903687447, -0.0006128029844869035, 812.8437136026427, -0.02500129918606342, 0.9849352009158311, -11.38559156880517, -2.279974889196073e-05, -6.30028688917313e-06, 1
-#define MOVING_AVG_SAMPLES					(4)											// Amount of measurements used in Moving Average
+#define MOVING_AVG_SAMPLES					(5)											// Amount of measurements used in Moving Average
 
 
 /* ERROR CODES */

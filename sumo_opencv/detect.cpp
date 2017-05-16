@@ -14,7 +14,6 @@
 /* SYSTEM INCLUDES */
 #include <cmath>
 
-
 /* GLOBAL VARIABLES */
 String currentMsg = "IDLE";
 String recMsg = "";
@@ -82,16 +81,33 @@ int detectMarkers()
 	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
 #endif
 
+
+
 #if ENABLE_REC
 	//Initialize Videowriter
 	VideoWriter vidWriter;
 
 	int codec = CV_FOURCC('M', 'J', 'P', 'G');
-	double fps = 25.0;
+	double fps = 12.0;
 	string vidFilename = "rec.avi";
 	Mat vidSizeImg;
+
+#if USE_STITCHER
+
+	inputVideo1.retrieve(image1);
+	inputVideo2.retrieve(image2);
+
+	stitcher(image1, image2, &stitchedImage, H);
+
+	//Crop stitched image
+	Rect cropROI(0, 0, 1900, 1900);
+	vidSizeImg = stitchedImage(cropROI);
+
+#else
 	//Save on image to get size
 	inputVideo1 >> vidSizeImg;
+#endif
+
 	bool isColor = (vidSizeImg.type() == CV_8UC3);
 
 	vidWriter.open(vidFilename, codec, fps, vidSizeImg.size(), isColor);
@@ -103,12 +119,33 @@ int detectMarkers()
 #endif
 
 
-	//Grab frames continuously if at least one webcam is connected 
+
+	//Grab frames continuously if at least one webcam is connected
 	while (inputVideo1.grab() | inputVideo2.grab())
 	{
-
 		inputVideo1.retrieve(image1);
 
+
+
+#if USE_STITCHER
+		inputVideo2.retrieve(image2);
+
+		stitcher(image1, image2, &stitchedImage, H);
+
+		//Crop stitched image
+		Rect cropROI(0, 0, 1900, 1900);
+		imageDetected = stitchedImage(cropROI);
+
+#if ENABLE_REC
+		if (recState == REC)
+		{
+			vidWriter.write(imageDetected);
+		}
+#endif
+
+
+#else
+		image1.copyTo(imageDetected);
 
 #if ENABLE_REC
 		if (recState == REC)
@@ -117,13 +154,6 @@ int detectMarkers()
 		}
 #endif
 
-#if USE_STITCHER
-		inputVideo2.retrieve(image2);
-
-		stitcher(image1, image2, &stitchedImage, H);
-		stitchedImage.copyTo(imageDetected);
-#else
-		image1.copyTo(imageDetected);
 #endif
 
 #if UNDISTORT_IMAGE
@@ -180,26 +210,24 @@ int detectMarkers()
 						cv::aruco::drawAxis(imageDetected, camMatrix, distCoeffs, rvecs[i], transl, MARKER_LENGTH * 0.5f);
 
 						//Get World Coordinates for all marker and save them in map "marker"
-						//marker[markerId] = xyzCoordinates of marker 
+						//marker[markerId] = xyzCoordinates of marker
 						getMarkerXYZ(markerIds[i], invRotMatrix, markerCorners[i], transl, invCamMatrix, marker, xyzOrigin);
 						//Get Euler Angles of rotation around z-Axis of each marker
 						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
 					}
-
 				}
 
-#if PRINT_WOLRD_COORDS 
+#if PRINT_WOLRD_COORDS
 
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{
 					if (i != originIndex)
 					{
 						std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
-						std::cout << " | Phi: " << phi[markerIds[i]]*180/M_PI << std::endl;
+						std::cout << " | Phi: " << phi[markerIds[i]] * 180 / M_PI << std::endl;
 					}
 				}
 #endif
-
 
 #if PRINT_COORDS_TO_CSV
 				if ((markerIds.size() > 1))
@@ -212,23 +240,21 @@ int detectMarkers()
 				}
 #endif
 
-
 #if SERIAL_TRANSMIT
 
-					uint16_t message[MAX_MSG_LENGTH];
+				uint16_t message[MAX_MSG_LENGTH];
 
-					composeSerialMessage(message, marker, phi);
+				composeSerialMessage(message, marker, phi);
 
-					//Send Message to COM Port
-					sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
-
+				//Send Message to COM Port
+				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
 
 #endif
 #if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
 					//if (!marker[i].empty())
-						cout << "ID = " << i << " || x = " << (uint16_t)message[3 * i] << " | y = " << (uint16_t)message[3 * i + 1] << " | phi = " << (uint16_t)message[3 * i + 2] << endl;
+					cout << "ID = " << i << " || x = " << (uint16_t)message[3 * i] << " | y = " << (uint16_t)message[3 * i + 1] << " | phi = " << (uint16_t)message[3 * i + 2] << endl;
 				}
 #endif
 			}
@@ -237,7 +263,6 @@ int detectMarkers()
 		{
 			putText(imageDetected, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
-
 
 #if SHOW_FRAME_CENTER
 		circle(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
@@ -269,7 +294,7 @@ int detectMarkers()
 #if 0
 		//Send start message by pressing "s"
 		if (115 == c || 83 == c)
-		{			
+		{
 			uint16_t message = VAR_START;
 			sendState = STATE_RUN;
 			currentMsg = "START";
@@ -320,14 +345,12 @@ int detectMarkers()
 		}
 #endif
 
-
 		/* Show Config Messages on the Screen */
 		String readyMsg = "Press 'r' to enter READY";
 		//String startMsg = "Press 's' to START";
-		String stopMsg	= "Press 'i' to reset to IDLE";
+		String stopMsg = "Press 'i' to reset to IDLE";
 		String transMsg = "Press 't' to start next Transition";
-		String exitMsg	= "Press 'e' to EXIT Program";
-		
+		String exitMsg = "Press 'e' to EXIT Program";
 
 		putText(imageDetected, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		//putText(imageDetected, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
@@ -346,14 +369,13 @@ int detectMarkers()
 		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 		imshow("Detected Markers", imageDetected);
 #endif
-
-}
+	}
 
 	inputVideo1.release();
 
 #if USE_STITCHER
 	inputVideo2.release();
 #endif
-	
+
 	return returnCode;
 }

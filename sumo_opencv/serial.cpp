@@ -129,12 +129,10 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 
 	for (int i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 	{
-		
+
 		if (!(marker[i].empty()))
 		{		
-			
-			
-		
+				
 			if (mvgAvgIndex.empty())
 			{
 				for (int j = 0; j < MAX_NUMBER_OF_MARKERS; j++)
@@ -175,7 +173,7 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 
 				message_[3 * i]		= (uint16_t)(xAvg);				// x - value
 				message_[3 * i + 1] = (uint16_t)(yAvg);				// y - value
-				message_[3 * i + 2] = (uint16_t)(phiAvg);			// phi - value
+				message_[3 * i + 2] = (uint16_t)(phi[i]* 180 / M_PI);			// phi - value
 
 			}
 			else
