@@ -6,4 +6,9 @@
 Welcome to ACon openCV's documentation!
 =======================================
 
-This is a test
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+   The area of a circle is :math:`A_\text{c} = (\pi/4) d^2`.
