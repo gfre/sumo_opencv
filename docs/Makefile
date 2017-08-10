@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = AConopenCV
+SPHINXPROJ    = AConSumoopenCV
 SOURCEDIR     = .
 BUILDDIR      = _build
 
