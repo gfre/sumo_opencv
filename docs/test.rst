@@ -18,19 +18,5 @@ Indices and tables
 External hyperlinks, like `Python 
 <test.html/>`_.
 
-text
-================
-The area of a circle is :math:`A_\text{c} = (\pi/4) d^2`.
-
-This is a typical paragraph.  An indented literal block follows.
-
-::
-
-    for a in [5,4,3,2,1]:   # this is program code, shown as-is
-        print a
-    print "it's..."
-    # a literal block continues until the indentation ends
-
-This text has returned to the indentation of the first paragraph,
-is outside of the literal block, and is therefore treated as an
-ordinary paragraph.
+test
+=====
