@@ -28,3 +28,5 @@ int generateAruco();
 
 //Function to calibrate Camera using Charuco Board
 int calibrateCamera();
+
+int createCharucoBoard(string filename, int squaresX, int squaresY, float squareLength, float markerLength, int dictionaryId, int borderBits);

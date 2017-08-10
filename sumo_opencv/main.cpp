@@ -13,6 +13,9 @@ Date   : 17.02.2017
 using namespace std;
 using namespace cv;
 
+
+
+
 int main(int argc, char *argv[])
 {
 
@@ -22,8 +25,10 @@ int main(int argc, char *argv[])
 	calibrateCamera();
 #else
 	detectMarkers();
+
 #endif
 
 	return ERR_OK;
 
 }
+

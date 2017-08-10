@@ -22,7 +22,7 @@
     <ProjectGuid>{9C6568C9-C18E-4A61-8B82-820063F01271}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>sumo_opencv</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

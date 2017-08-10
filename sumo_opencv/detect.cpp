@@ -13,12 +13,17 @@
 #include "config.h"
 /* SYSTEM INCLUDES */
 #include <cmath>
+#include <time.h>
+
 
 /* GLOBAL VARIABLES */
 String currentMsg = "IDLE";
 String recMsg = "";
 static sendState_t sendState = STATE_IDLE;
 static recState_t recState = NO_REC;
+static clock_t elapsedTime = 0;
+static clock_t startTime = 0;
+
 
 int detectMarkers()
 {
@@ -30,6 +35,8 @@ int detectMarkers()
 
 	//Camera Parameter xml configuration file
 	string configFile = CALIB_FILE_NAME;
+	ofstream outputFile;
+	outputFile.open(CSV_OUTPUT_FILENAME, ios::out | ios::app);
 
 	// Open Camera Parameter File
 	cv::Mat camMatrix, invCamMatrix, distCoeffs;
@@ -88,7 +95,7 @@ int detectMarkers()
 	VideoWriter vidWriter;
 
 	int codec = CV_FOURCC('M', 'J', 'P', 'G');
-	double fps = 12.0;
+	double fps = (double)REC_FPS;
 	string vidFilename = "rec.avi";
 	Mat vidSizeImg;
 
@@ -136,7 +143,7 @@ int detectMarkers()
 		Rect cropROI(0, 0, 1900, 1900);
 		imageDetected = stitchedImage(cropROI);
 
-#if ENABLE_REC
+#if ENABLE_REC 
 		if (recState == REC)
 		{
 			vidWriter.write(imageDetected);
@@ -229,16 +236,6 @@ int detectMarkers()
 				}
 #endif
 
-#if PRINT_COORDS_TO_CSV
-				if ((markerIds.size() > 1))
-				{
-#if CSV_SAVE_ID
-					writeCoordsToCSV(marker[0], (*markerIds)[0]);
-#else
-					writeCoordsToCSV(marker[0], CSV_NO_ID);
-#endif
-				}
-#endif
 
 #if SERIAL_TRANSMIT
 
@@ -257,6 +254,40 @@ int detectMarkers()
 					cout << "ID = " << i << " || x = " << (uint16_t)message[3 * i] << " | y = " << (uint16_t)message[3 * i + 1] << " | phi = " << (uint16_t)message[3 * i + 2] << endl;
 				}
 #endif
+				
+
+#if PRINT_COORDS_TO_CSV
+				long double timestamp = 0.0;
+
+				if ((markerIds.size() > 1))
+				{
+#if CSV_SAVE_ID		
+
+					if (recState == REC)
+					{
+						if (startTime == 0)
+						{
+							startTime = clock();
+						}
+
+						elapsedTime = clock() - startTime;
+						timestamp = (long double)elapsedTime / (long double)(CLOCKS_PER_SEC * 100.0);
+
+						for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
+						{
+							writeMsgToCSV((int16_t *)message, MAX_MSG_LENGTH, timestamp, &outputFile);
+
+						}
+
+						
+					}
+#else
+					writeCoordsToCSV(marker[0], CSV_NO_ID);
+#endif
+				}
+#endif
+			
+
 			}
 		}
 		else
@@ -341,6 +372,7 @@ int detectMarkers()
 				recState = NO_REC;
 				recMsg = "";
 				vidWriter.release();
+				outputFile.close();
 			}
 		}
 #endif

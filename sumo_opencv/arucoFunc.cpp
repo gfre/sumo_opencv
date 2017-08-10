@@ -80,8 +80,8 @@ int createCharucoBoard(string filename, int squaresX, int squaresY, float square
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(ARUCO_DICT));
 
 	Size imageSize;
-	imageSize.width = ((squaresX * squareLength + 2 * margins) * 1000 / 25.4 * 72) * 0 + 2834.645669;
-	imageSize.height = ((squaresY * squareLength + 2 * margins) * 1000 / 25.4 * 72) * 0 + 2834.645669;
+	imageSize.width = ((squaresX * squareLength + 2 * margins) * 1000 / 25.4 * 72);// *0 + 2834.645669;
+	imageSize.height = ((squaresY * squareLength + 2 * margins) * 1000 / 25.4 * 72);// *0 + 2834.645669;
 
 	Ptr<aruco::CharucoBoard> board = aruco::CharucoBoard::create(squaresX, squaresY, (float)squareLength, (float)markerLength, dictionary);
 

@@ -11,7 +11,7 @@
 
 #define ROTATE_FIRST						(FALSE)										//Camera Pinhole Model: Rotate First translate second or other way round
 #define SHIFT_POINT_TO_CENTER				(TRUE)										//Use center Point of Aruco for localization instead of Top Left Corner
-#define USE_STITCHER						(TRUE)										//Use 2 camera feeds and stitch images together
+#define USE_STITCHER						(FALSE)										//Use 2 camera feeds and stitch images together
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 #define ENABLE_REC							(TRUE)
@@ -19,7 +19,7 @@
 #define PRINT_WOLRD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_ORIGIN_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
 #define PRINT_UV_COORDS						(FALSE)										//Print 2D Image Coordinates (u,v) to Command line
-#define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
+#define PRINT_COORDS_TO_CSV					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
 #define PRINT_INTR_PARA						(FALSE)										//Print intrinsic camera parameters
 #define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
@@ -32,7 +32,7 @@
 #define PRINT_SERIAL_MSG_TO_CL				(FALSE)										//Print the Serial Message to Command Line
 
 /* SAVE COORDINATES TO CSV */
-#define CSV_SAVE_ID							(FALSE)										//Set to true if id should be saved as well
+#define CSV_SAVE_ID							(TRUE)										//Set to true if id should be saved as well
 #define CSV_USE_COMMA						(TRUE)										//Use a comma as decimal separator 
 #define CSV_SEPARATOR						";"
 #define CSV_OUTPUT_FILENAME					"data.csv"
@@ -43,9 +43,11 @@
 /* CAMERA SETUP */
 #define FIRST_CAM_ID						(1)											//ID of first camera
 #define SEC_CAM_ID							(2)											//ID of second camera
-#define FRAME_WIDTH							(1900)										//Camera image width
-#define FRAME_HEIGHT						(1900)										//Camera image height
+#define FRAME_WIDTH							(2048)	//(1900)										//Camera image width
+#define FRAME_HEIGHT						(1536)  //(1900)										//Camera image height
 #define MS_BETWEEN_FRAMES					(10)										//wait 10ms before grabbing new frame, may impact performance
+#define REC_FPS								(30)
+
 
 /* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary

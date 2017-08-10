@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
 /* SYSTEM INCLUDES */
-#include <Windows.h>
+#include <windows.h>
 #include <stdint.h>
 #include <iostream>
 #include <stdio.h>

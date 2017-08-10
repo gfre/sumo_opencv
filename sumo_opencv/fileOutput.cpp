@@ -10,6 +10,10 @@
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
 
+/* MAKROS */
+#define NOTHING							" "
+#define SAVE_VALID_MARKER(marker_)		 ( (marker_) != -1) ? (marker_) : 0xFFFF )
+
 using namespace std;
 
 /* Use comma as decimal separator
@@ -77,6 +81,59 @@ int writeCoordsToCSV(cv::Mat coordinates, int id=CSV_NO_ID)
 		outputFile << "\n";
 
 		outputFile.close();
+
+	}
+
+	return errorCode;
+}
+
+int writeMsgToCSV(int16_t *message, int msgLength, long double timestamp, ofstream *outputFile)
+{
+	int errorCode = ERR_OK;
+
+	if (!outputFile->is_open())
+	{
+		errorCode = ERR_FILE_NOT_OPEN;
+	}
+	else {
+#if CSV_USE_COMMA
+		//Use comma as decimal separator
+		locale comma_locale(locale(), new CommaSeparator);
+		outputFile->imbue(comma_locale);
+#endif
+
+		*outputFile << timestamp << CSV_SEPARATOR << "" << CSV_SEPARATOR;
+
+		for (int i = 0; i < msgLength / NUM_OF_VARIABLES ; i++)
+		{
+			
+			if (message[3 * i] == -1)
+			{
+				*outputFile << "";
+			} 
+			else
+			{
+				*outputFile << message[3 * i];
+			}
+			
+			*outputFile << CSV_SEPARATOR;
+
+			if (message[3 * i + 1] == -1)
+			{
+				*outputFile << "";
+			}
+			else
+			{
+				*outputFile << message[3 * i + 1];
+			}
+			*outputFile << CSV_SEPARATOR;
+			*outputFile << "";
+			*outputFile << CSV_SEPARATOR;
+		}
+
+		*outputFile << "\n";
+
+		
 
 	}
 
