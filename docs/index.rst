@@ -35,3 +35,12 @@ This is a typical paragraph.  An indented literal block follows.
 This text has returned to the indentation of the first paragraph,
 is outside of the literal block, and is therefore treated as an
 ordinary paragraph.
+
+.. _my-reference-label:
+
+Section to cross-reference
+--------------------------
+
+This is the text of the section.
+
+It refers to the section itself, see :ref:`my-reference-label`.
