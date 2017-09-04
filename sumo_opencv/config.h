@@ -41,7 +41,7 @@
 #define CSV_SAVE_TIME						(TRUE)										//Save timestamp for each measurement
 
 /* CAMERA SETUP */
-#define FIRST_CAM_ID						(1)											//ID of first camera
+#define FIRST_CAM_ID						(0)											//ID of first camera
 #define SEC_CAM_ID							(2)											//ID of second camera
 #define FRAME_WIDTH							(2048)	//(1900)										//Camera image width
 #define FRAME_HEIGHT						(1536)  //(1900)										//Camera image height

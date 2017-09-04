@@ -6,41 +6,18 @@
 Welcome to ACon Sumo openCV's documentation!
 ============================================
 
+Welcome to ACon Sumo openCV's documention. 
+On this page you'll find everything you need to know to run the openCV program for the Sumo test environment.
+
+If you want to modify, add new functions or just want to understand the code, you need to start with :ref:`Setup <setup>`.
+
+If you just want to launch the program as it is, download the :download:`Prebuild Release Version (04/09/2017)<downloads/Release.zip>`.
+
+.. warning:: The Prebuild Release Version may not be working on your machine (it is only tested on Windows 10 x64) and the .zip file may be out of date. Therefore it is recommended that you build from the source files yourself. You'll find everything in the :ref:`Setup <setup>` chapter.
+
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-   Intro
-   Getting Started
-   Installation
-   Tutorials 
+   :caption: Table of Contents
+   :numbered:
 
-
-Indices and tables
-==================
-
-
-text
-================
-The area of a circle is :math:`A_\text{c} = (\pi/4) d^2`.
-
-This is a typical paragraph.  An indented literal block follows.
-
-::
-
-    for a in [5,4,3,2,1]:   # this is program code, shown as-is
-        print a
-    print "it's..."
-    # a literal block continues until the indentation ends
-
-This text has returned to the indentation of the first paragraph,
-is outside of the literal block, and is therefore treated as an
-ordinary paragraph.
-
-.. _my-reference-label:
-
-Section to cross-reference
---------------------------
-
-This is the text of the section.
-
-It refers to the section itself, see :ref:`my-reference-label`.
+        Setup <setup.rst>
