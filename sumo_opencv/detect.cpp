@@ -165,11 +165,11 @@ int detectMarkers()
 #endif
 		
 		//Undistort Image if needed
-		Mat imageUndistorted;
-		imageDetected.copyTo(imageUndistorted);
-		if (undistortImage) {
-			undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
-		}
+		//Mat imageUndistorted;
+		//imageDetected.copyTo(imageUndistorted);
+		//if (undistortImage) {
+		//	undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
+		//}
 		
 		//Initialize Variables
 		vector<int> markerIds;
@@ -188,13 +188,13 @@ int detectMarkers()
 		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
 
 		//Detect Markers
-		aruco::detectMarkers(imageUndistorted, dictionary, markerCorners, markerIds, param);
+		aruco::detectMarkers(imageDetected, dictionary, markerCorners, markerIds, param);
 
 		//Only proceed if at least 1 marker was detected
 		if (markerIds.size() > 0)
 		{
-			aruco::drawDetectedMarkers(imageUndistorted, markerCorners, markerIds);
-			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, Mat::zeros(1, 4, CV_64F), rvecs, tvecs);
+			aruco::drawDetectedMarkers(imageDetected, markerCorners, markerIds);
+			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
 
 			//Check if the Origin Marker was detected
 			int originIndex = -1;
@@ -203,7 +203,7 @@ int detectMarkers()
 
 			if ((ERR_OK != getOriginXYZ(markerIds, originIndex, rvecs, tvecs, invCamMatrix, markerCorners, xyzOrigin)) & USE_REL_COORDS)
 			{
-				putText(imageUndistorted, ERR_STR_NO_ORIGIN, Point(800, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
+				putText(imageDetected, ERR_STR_NO_ORIGIN, Point(800, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 			}
 			else
 			{
@@ -211,19 +211,46 @@ int detectMarkers()
 				{
 					if (i != originIndex)
 					{
-						Mat rotMatrix;
-						Vec3d transl = tvecs[i];
+						cv::Mat XYZ, xyz, t, rotMatrix;
+						//Vec3d transl = tvecs[i];
 						Rodrigues(rvecs[i], rotMatrix);
-						Mat invRotMatrix = rotMatrix.inv();
+						//Mat invRotMatrix = rotMatrix.inv();
 
 						//Draw Axis of detected marker
-						cv::aruco::drawAxis(imageUndistorted, camMatrix, Mat::zeros(1, 4, CV_64F), rvecs[i], transl, MARKER_LENGTH * 0.5f);
+						cv::aruco::drawAxis(imageDetected, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
 
+#if SHIFT_POINT_TO_CENTER
+						//Calculate Center using moments
+						cv::Moments mu = cv::moments(markerCorners[i]);
+						XYZ = cv::Mat::ones(3, 1, cv::DataType<double>::type);
+						XYZ.at<double>(0, 0) = mu.m10 / mu.m00;
+						XYZ.at<double>(1, 0) = mu.m01 / mu.m00;
+						XYZ.at<double>(2, 0) = Z_CONST;
+						std::cout << "XYZ(1): " << XYZ.at<double>(0, 0) << std::endl;
+						std::cout << "XYZ(2): " << XYZ.at<double>(1, 0) << std::endl;
+						std::cout << "XYZ(3): " << XYZ.at<double>(2, 0) << std::endl;
+
+#else
+						//Use top left corner
+						XYZ.at<double>(0, 0) = markerCorners[0].x;
+						XYZ.at<double>(1, 0) = markerCorners[0].y;
+						XYZ.at<double>(2, 0) = Z_CONST;
+#endif
+						//Copy translation vector tvec to cv::Mat object t
+						t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
+						t.at<double>(0, 0) = tvecs[i][0];
+						t.at<double>(1, 0) = tvecs[i][1];
+						t.at<double>(2, 0) = tvecs[i][2];
+
+						std::cout << "t(1): " << t.at<double>(0, 0) << std::endl;
+						std::cout << "t(2): " << t.at<double>(1, 0) << std::endl;
+						std::cout << "t(2): " << t.at<double>(2, 0) << std::endl;
 						//Get World Coordinates for all marker and save them in map "marker"
 						//marker[markerId] = xyzCoordinates of marker
-						getMarkerXYZ(markerIds[i], invRotMatrix, markerCorners[i], transl, invCamMatrix, marker, xyzOrigin);
+						//getMarkerXYZ(markerIds[i], invRotMatrix, markerCorners[i], tvecs[i], invCamMatrix, marker, xyzOrigin);
 						//Get Euler Angles of rotation around z-Axis of each marker
 						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
+						marker[markerIds[i]] = xyz;
 
 					}
 				}
@@ -296,16 +323,16 @@ int detectMarkers()
 		}
 		else
 		{
-			putText(imageUndistorted, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
+			putText(imageDetected, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
 
 #if SHOW_FRAME_CENTER
-		circle(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
+		circle(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 #endif
 
 #if SHOW_FRAME_COORD_SYS
-		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
-		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
+		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
+		arrowedLine(imageDetected, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
 
 		//End loop by pressing "e"
@@ -403,26 +430,26 @@ int detectMarkers()
 		String transMsg = "Press 't' to start next Transition";
 		String exitMsg = "Press 'e' to EXIT Program";
 		String undistortMsg = "Press 'g' to toggle Distortion";
-		putText(imageUndistorted, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 		//putText(imageUndistorted, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, stopMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, transMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, stopMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, transMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
-		putText(imageUndistorted, undistortMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, undistortMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
-		putText(imageUndistorted, exitMsg, Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, exitMsg, Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 
 
-		putText(imageUndistorted, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(imageDetected, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageDetected, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
-		putText(imageUndistorted, recMsg, Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(imageDetected, recMsg, Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
 		//Set Window
 		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 #if SHOW_FINAL_IMAGE
 		//Draw image
-		imshow("Detected Markers", imageUndistorted);
+		imshow("Detected Markers", imageDetected);
 #endif
 	}
 

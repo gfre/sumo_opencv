@@ -14,15 +14,15 @@
 #define USE_STITCHER						(FALSE)										//Use 2 camera feeds and stitch images together
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
-#define ENABLE_REC							(TRUE)
-#define START_REC_WITH_TRANSITION			(TRUE)
+#define ENABLE_REC							(FALSE)
+#define START_REC_WITH_TRANSITION			(FALSE)
 
 #define PRINT_WOLRD_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
-#define PRINT_ORIGIN_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
-#define PRINT_UV_COORDS						(FALSE)										//Print 2D Image Coordinates (u,v) to Command line
-#define PRINT_COORDS_TO_CSV					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
+#define PRINT_ORIGIN_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
+#define PRINT_UV_COORDS						(TRUE)										//Print 2D Image Coordinates (u,v) to Command line
+#define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
-#define PRINT_INTR_PARA						(FALSE)										//Print intrinsic camera parameters
+#define PRINT_INTR_PARA						(TRUE)										//Print intrinsic camera parameters
 #define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)										//Show uv-coordinate system on image
 
@@ -46,7 +46,7 @@
 #define SEC_CAM_ID							(2)											//ID of second camera
 #define FRAME_WIDTH							(2592)	//(1900)										//Camera image width
 #define FRAME_HEIGHT						(2048)  //(1900)										//Camera image height
-#define MS_BETWEEN_FRAMES					(5)										//wait 10ms before grabbing new frame, may impact performance
+#define MS_BETWEEN_FRAMES					(10)										//wait 10ms before grabbing new frame, may impact performance
 #define REC_FPS								(2.5)
 
 
@@ -57,7 +57,7 @@
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
-#define CALIB_FILE_NAME						"camera_parameters/calibration_basler.xml"
+#define CALIB_FILE_NAME						"camera_parameters/calibration_basler7_2940.xml"
 	//Corner Refinement
 #define CR_ENABLE							(true)
 #define CR_WIN_SIZE							(3)
@@ -65,7 +65,7 @@
 #define CR_MIN_ACCURACY						(0.1)
 
 	/* SERIAL SETUP*/
-#define SERIAL_COM_PORT						"COM5"										//Select com port for serial transmission
+#define SERIAL_COM_PORT						"COM3"										//Select com port for serial transmission
 
 	/* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)										//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
@@ -77,9 +77,9 @@
 #define CHARUCO_MARKER_LENGTH				(283)										//Charuco Board marker length in pixel
 #define CHARUCO_SQUARE_LENGTH_M				(0.12165)									//Charuco Board square length in meter
 #define CHARUCO_MARKER_LENGTH_M				(0.09405)									//Charuco Board marker length in meter
-#define CHARUCO_FOCAL_LENGTH_EST			(1700)										//Intrinsic guess of focal length
+#define CHARUCO_FOCAL_LENGTH_EST			(1667)										//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)										//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler.xml"  //Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler7_2940.xml"  //Name of output file of generated calibration parameters
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)										//Show detected Charuco Corners on Image

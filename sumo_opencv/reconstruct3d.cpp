@@ -21,7 +21,7 @@ int getAllEulerAnglesFromRotMatrix(std::vector<cv::Vec3d> &rvecs, std::vector<in
 
 			cv::Rodrigues(rvecs[i], rotMatrix);
 
-			xAngle = atan2(rotMatrix.at<double>(2, 1), rotMatrix.at<double>(2, 2));
+			xAngle = atan2(rotMatrix.at<double>(1, 2), rotMatrix.at<double>(2, 2));
 
 			sinX = sin(xAngle);
 			cosX = cos(xAngle);
@@ -41,7 +41,7 @@ int getEulerAngleFromRotMatrix(cv::Mat &rotMatrix, int &markerId, std::map<int, 
 	double xAngle;
 	double sinX, cosX;
 
-	xAngle = atan2(rotMatrix.at<double>(2, 1), rotMatrix.at<double>(2, 2));
+	xAngle = atan2(rotMatrix.at<double>(1, 2), rotMatrix.at<double>(2, 2));
 
 	sinX = sin(xAngle);
 	cosX = cos(xAngle);
@@ -64,6 +64,8 @@ int getWorldCoordinates(cv::Point2f uv, cv::Mat &xyz, cv::Mat invCamMatrix, cv::
 	uvPoint.at<double>(0, 0) = uv.x;
 	uvPoint.at<double>(1, 0) = uv.y;
 
+
+
 	//Copy translation vector tvec to cv::Mat object t
 	t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
 	t.at<double>(0, 0) = tvec[0];
@@ -72,7 +74,6 @@ int getWorldCoordinates(cv::Point2f uv, cv::Mat &xyz, cv::Mat invCamMatrix, cv::
 
 
 #if ROTATE_FIRST 
-
 	//calculate temp values to solve eq for scaling factor s
 	tmp = invRotMatrix * (invCamMatrix * uvPoint);
 	tmp2 = (invRotMatrix * t);
@@ -84,7 +85,6 @@ int getWorldCoordinates(cv::Point2f uv, cv::Mat &xyz, cv::Mat invCamMatrix, cv::
 	double y  = s* tmp.at<double>(1, 0) - tmp2.at<double>(1, 0);
 	double x =  s* tmp.at<double>(0, 0) - tmp2.at<double>(0, 0);
 #else
-
 	tmp = invRotMatrix * (invCamMatrix * uvPoint);
 	tmp2 =  t;
 	s = (zConst - t.at<double>(2, 0)) / tmp.at<double>(2, 0);
