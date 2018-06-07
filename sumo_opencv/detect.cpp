@@ -49,9 +49,11 @@ int detectMarkers()
 	invCamMatrix = camMatrix.inv();
 
 #if PRINT_INTR_PARA
-	cout << "CamMatrix: " << camMatrix << endl;
+	cout << "Camera Matrix: " << camMatrix << endl;
 	cout << "------------------------------------------" << endl;
-	cout << "inv CamMatrix: " << invCamMatrix << endl;
+	cout << "Inv Camera Matrix: " << invCamMatrix << endl;
+	cout << "------------------------------------------" << endl;
+	cout << "Distortion coefficients: " << distCoeffs << endl;
 	cout << "============================================" << endl << endl << endl;
 #endif
 
@@ -59,7 +61,7 @@ int detectMarkers()
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 
 	//Open Webcam
-	VideoCapture inputVideo1, inputVideo2;
+	VideoCapture inputVideo1;
 
 	//Select Webcams
 	inputVideo1.open(FIRST_CAM_ID);
@@ -68,15 +70,8 @@ int detectMarkers()
 	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
-#if USE_STITCHER
-	inputVideo2.open(SEC_CAM_ID);
-	//Set Resolution
-	inputVideo2.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	inputVideo2.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
-#endif
-
 	//initialize Mat objects
-	Mat image1, image2, stitchedImage, imageDetected, H;
+	Mat image1, imageDetected, H;
 
 #if RECALCULATE_HOMOGRAPHY
 	inputVideo1.retrieve(image1);
@@ -100,21 +95,9 @@ int detectMarkers()
 	string vidFilename = "rec.avi";
 	Mat vidSizeImg;
 
-#if USE_STITCHER
 
-	inputVideo1.retrieve(image1);
-	inputVideo2.retrieve(image2);
-
-	stitcher(image1, image2, &stitchedImage, H);
-
-	//Crop stitched image
-	Rect cropROI(0, 0, 1900, 1900);
-	vidSizeImg = stitchedImage(cropROI);
-
-#else
 	//Save on image to get size
 	inputVideo1 >> vidSizeImg;
-#endif
 
 	bool isColor = (vidSizeImg.type() == CV_8UC3);
 
@@ -129,10 +112,9 @@ int detectMarkers()
 
 
 	//Grab frames continuously if at least one webcam is connected
-	while (inputVideo1.grab() | inputVideo2.grab())
+	while (inputVideo1.grab())
 	{
 		inputVideo1.retrieve(image1);
-
 
 
 #if USE_STITCHER
@@ -182,7 +164,6 @@ int detectMarkers()
 
 		// Corner detection parameters
 		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
-		//param->doCornerRefinement = CR_ENABLE;
 		param->cornerRefinementWinSize = CR_WIN_SIZE;
 		param->cornerRefinementMaxIterations = CR_MAX_ITERATIONS;
 		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
@@ -225,14 +206,14 @@ int detectMarkers()
 
 #if SHIFT_POINT_TO_CENTER
 						//Calculate Center using moments
-						cv::Moments mu = cv::moments(markerCorners[i]);
-						uv = cv::Mat::ones(3, 1, cv::DataType<double>::type);
-						uv.at<double>(0, 0) = mu.m10 / mu.m00;
-						uv.at<double>(1, 0) = mu.m01 / mu.m00;
-						uv.at<double>(2, 0) = 1;
-						std::cout << "UV(1): " << uv.at<double>(0, 0) << std::endl;
-						std::cout << "UV(2): " << uv.at<double>(1, 0) << std::endl;
-						std::cout << "UV(3): " << uv.at<double>(2, 0) << std::endl;
+						//cv::Moments mu = cv::moments(markerCorners[i]);
+						//uv = cv::Mat::ones(3, 1, cv::DataType<double>::type);
+						//uv.at<double>(0, 0) = mu.m10 / mu.m00;
+						//uv.at<double>(1, 0) = mu.m01 / mu.m00;
+						//uv.at<double>(2, 0) = 1;
+						//std::cout << "UV(1): " << uv.at<double>(0, 0) << std::endl;
+						//std::cout << "UV(2): " << uv.at<double>(1, 0) << std::endl;
+						//std::cout << "UV(3): " << uv.at<double>(2, 0) << std::endl;
 
 #else
 						//Use top left corner
@@ -246,28 +227,13 @@ int detectMarkers()
 						t.at<double>(1, 0) = tvecs[i][1];
 						t.at<double>(2, 0) = tvecs[i][2];
 
-						std::cout << "t(1): " << t.at<double>(0, 0) << std::endl;
-						std::cout << "t(2): " << t.at<double>(1, 0) << std::endl;
-						std::cout << "t(2): " << t.at<double>(2, 0) << std::endl;
-						//Get World Coordinates for all marker and save them in map "marker"
-
-						a = invRotMatrix * (invCamMatrix * uv);
-						b = invRotMatrix * t;
-
-						s = (Z_CONST + b.at<double>(2, 0)) / (a.at<double>(2, 0));
-						XYZ = rotMatrix.t() * ((s*invCamMatrix*uv) - t);
-
-						std::cout << "X: " << XYZ.at<double>(0, 0) << std::endl;
-						std::cout << "Y: " << XYZ.at<double>(1, 0) << std::endl;
-						std::cout << "Z: " << XYZ.at<double>(2, 0) << std::endl;
-
 						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
-						marker[markerIds[i]] = XYZ;
+						marker[markerIds[i]] = t;
 
 					}
 				}
 
-#if PRINT_WOLRD_COORDS
+#if PRINT_WORLD_COORDS
 
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{
@@ -466,10 +432,6 @@ int detectMarkers()
 	}
 
 	inputVideo1.release();
-
-#if USE_STITCHER
-	inputVideo2.release();
-#endif
 
 	return returnCode;
 }

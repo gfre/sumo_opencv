@@ -17,12 +17,12 @@
 #define ENABLE_REC							(FALSE)
 #define START_REC_WITH_TRANSITION			(FALSE)
 
-#define PRINT_WOLRD_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
+#define PRINT_WORLD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_ORIGIN_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
 #define PRINT_UV_COORDS						(TRUE)										//Print 2D Image Coordinates (u,v) to Command line
 #define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
-#define PRINT_INTR_PARA						(TRUE)										//Print intrinsic camera parameters
+#define PRINT_INTR_PARA						(TRUE)										//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
 #define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)										//Show uv-coordinate system on image
 
@@ -57,7 +57,7 @@
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
-#define CALIB_FILE_NAME						"camera_parameters/calibration_basler7_2940.xml"
+#define CALIB_FILE_NAME						"camera_parameters/calibration_basler7.xml"
 	//Corner Refinement
 #define CR_ENABLE							(true)
 #define CR_WIN_SIZE							(3)
@@ -79,7 +79,7 @@
 #define CHARUCO_MARKER_LENGTH_M				(0.09405)									//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1667)										//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)										//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler7_2940.xml"  //Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler7.xml"  //Name of output file of generated calibration parameters
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)										//Show detected Charuco Corners on Image
