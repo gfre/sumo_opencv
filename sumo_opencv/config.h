@@ -16,17 +16,17 @@
 #define ENABLE_REC							(FALSE)
 #define START_REC_WITH_TRANSITION			(FALSE)
 
-#define PRINT_WORLD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
-#define PRINT_ORIGIN_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
+#define PRINT_WORLD_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
+#define PRINT_ORIGIN_COORDS					(FALSE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
 #define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
-#define PRINT_INTR_PARA						(TRUE)										//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
-#define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
-#define SHOW_FRAME_COORD_SYS				(TRUE)										//Show uv-coordinate system on image
+#define PRINT_INTR_PARA						(FALSE)										//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
+#define SHOW_FRAME_CENTER					(FALSE)										//Show principal point on image
+#define SHOW_FRAME_COORD_SYS				(FALSE)										//Show uv-coordinate system on image
 
 #define SERIAL_TRANSMIT						(TRUE)										//Enable/Disable Serial Transmission
 #define SERIAL_READ_DATA					(TRUE)										//READ Data from Serial
-#define PRINT_SERIAL_MSG_TO_CL				(TRUE)										//Print the Serial Message to Command Line
+#define PRINT_SERIAL_MSG_TO_CL				(FALSE)										//Print the Serial Message to Command Line
 
 	/* SAVE COORDINATES TO CSV */
 #define CSV_SAVE_ID							(TRUE)										//Set to true if id should be saved as well
@@ -84,7 +84,7 @@
 #define MIN_HESSIAN							(500)										//Minimum Hessian threshold for SURF Algorithm
 #define Z_CONST								(2940)										//Distance from Camera to Marker Plane in mm (3150-3250)
 #define HOMOGRAPHY_M						0.9481264903687447, -0.0006128029844869035, 812.8437136026427, -0.02500129918606342, 0.9849352009158311, -11.38559156880517, -2.279974889196073e-05, -6.30028688917313e-06, 1
-#define MOVING_AVG_SAMPLES					(1)											// Amount of measurements used in Moving Average
+#define MOVING_AVG_SAMPLES					(5)											// Amount of measurements used in Moving Average
 
 
 	/* ERROR CODES */
