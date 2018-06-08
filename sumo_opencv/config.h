@@ -10,8 +10,7 @@
 #define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
 #define ROTATE_FIRST						(FALSE)										//Camera Pinhole Model: Rotate First translate second or other way round
-#define SHIFT_POINT_TO_CENTER				(TRUE)										//Use center Point of Aruco for localization instead of Top Left Corner
-#define USE_STITCHER						(FALSE)										//Use 2 camera feeds and stitch images together
+#define SHIFT_POINT_TO_CENTER				(FALSE)										//Use center Point of Aruco for localization instead of Top Left Corner
 #define UNDISTORT_IMAGE						(FALSE)	//!!Warning: if true, image may be undistorted twice for pose estimation
 #define SHOW_FINAL_IMAGE					(TRUE)										//Show the Live Image with detected Markers and Coordinate System. May slow down the program 
 #define ENABLE_REC							(FALSE)
@@ -19,14 +18,11 @@
 
 #define PRINT_WORLD_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_ORIGIN_COORDS					(TRUE)										//Print 3D World Coordinates (X,Y,Z) of Origin Marker to Command line 
-#define PRINT_UV_COORDS						(TRUE)										//Print 2D Image Coordinates (u,v) to Command line
 #define PRINT_COORDS_TO_CSV					(FALSE)										//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define USE_REL_COORDS						(FALSE)										//TRUE: Use coordinates relative to ORGIN_MARKER; FALSE: use coordinates relative to principal point
 #define PRINT_INTR_PARA						(TRUE)										//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
 #define SHOW_FRAME_CENTER					(TRUE)										//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)										//Show uv-coordinate system on image
-
-#define RECALCULATE_HOMOGRAPHY				(FALSE)										//Set to 1 if camera settings/position changed or Homography Matrix needs to be calculated again
 
 #define SERIAL_TRANSMIT						(TRUE)										//Enable/Disable Serial Transmission
 #define SERIAL_READ_DATA					(TRUE)										//READ Data from Serial
@@ -42,8 +38,7 @@
 #define CSV_SAVE_TIME						(TRUE)										//Save timestamp for each measurement
 
 	/* CAMERA SETUP */
-#define FIRST_CAM_ID						(1)											//ID of first camera
-#define SEC_CAM_ID							(2)											//ID of second camera
+#define FIRST_CAM_ID						(0)											//ID of first camera
 #define FRAME_WIDTH							(2592)	//(1900)										//Camera image width
 #define FRAME_HEIGHT						(2048)  //(1900)										//Camera image height
 #define MS_BETWEEN_FRAMES					(10)										//wait 10ms before grabbing new frame, may impact performance
@@ -65,7 +60,7 @@
 #define CR_MIN_ACCURACY						(0.1)
 
 	/* SERIAL SETUP*/
-#define SERIAL_COM_PORT						"COM3"										//Select com port for serial transmission
+#define SERIAL_COM_PORT						"COM4"										//Select com port for serial transmission
 
 	/* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)										//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
@@ -89,7 +84,7 @@
 #define MIN_HESSIAN							(500)										//Minimum Hessian threshold for SURF Algorithm
 #define Z_CONST								(2940)										//Distance from Camera to Marker Plane in mm (3150-3250)
 #define HOMOGRAPHY_M						0.9481264903687447, -0.0006128029844869035, 812.8437136026427, -0.02500129918606342, 0.9849352009158311, -11.38559156880517, -2.279974889196073e-05, -6.30028688917313e-06, 1
-#define MOVING_AVG_SAMPLES					(5)											// Amount of measurements used in Moving Average
+#define MOVING_AVG_SAMPLES					(1)											// Amount of measurements used in Moving Average
 
 
 	/* ERROR CODES */

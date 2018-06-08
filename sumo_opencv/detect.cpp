@@ -60,7 +60,7 @@ int detectMarkers()
 	// Set Aruco Dictionary
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 
-	//Open Webcam
+	//Webcam
 	VideoCapture inputVideo1;
 
 	//Select Webcams
@@ -68,21 +68,10 @@ int detectMarkers()
 
 	//Set Resolution
 	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+	inputVideo1.set(CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH);
 
 	//initialize Mat objects
-	Mat image1, imageDetected, H;
-
-#if RECALCULATE_HOMOGRAPHY
-	inputVideo1.retrieve(image1);
-	inputVideo2.retrieve(image2);
-	getHomographyMatrix(image1, image2, &H, MIN_HESSIAN, 100.0, true);
-	// Print new Homography Matrix for saving
-	cout << H;
-#else
-	// Use "old" Homography Matrix
-	H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
-#endif
+	Mat image1, imageDetected;
 
 
 
@@ -94,7 +83,6 @@ int detectMarkers()
 	double fps = (double)REC_FPS;
 	string vidFilename = "rec.avi";
 	Mat vidSizeImg;
-
 
 	//Save on image to get size
 	inputVideo1 >> vidSizeImg;
@@ -115,41 +103,18 @@ int detectMarkers()
 	while (inputVideo1.grab())
 	{
 		inputVideo1.retrieve(image1);
-
-
-#if USE_STITCHER
-		inputVideo2.retrieve(image2);
-
-		stitcher(image1, image2, &stitchedImage, H);
-
-		//Crop stitched image
-		Rect cropROI(0, 0, 1900, 1900);
-		imageDetected = stitchedImage(cropROI);
-
-#if ENABLE_REC 
-		if (recState == REC)
-		{
-			vidWriter.write(imageDetected);
-		}
-#endif
-
-
-#else
 		image1.copyTo(imageDetected);
-
 #if ENABLE_REC
 		if (recState == REC)
 		{
 			vidWriter.write(image1);
 		}
 #endif
-
-#endif
-		
 		//Undistort Image if needed
 		Mat imageUndistorted;
 		imageDetected.copyTo(imageUndistorted);
-		if (undistortImage) {
+		if (undistortImage) 
+		{
 			undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
 		}
 		
@@ -168,19 +133,15 @@ int detectMarkers()
 		param->cornerRefinementMaxIterations = CR_MAX_ITERATIONS;
 		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
 
-		//Detect Markers
+		//Detect Marker corners
 		aruco::detectMarkers(imageUndistorted, dictionary, markerCorners, markerIds, param);
 
 		//Only proceed if at least 1 marker was detected
 		if (markerIds.size() > 0)
 		{
 			aruco::drawDetectedMarkers(imageUndistorted, markerCorners, markerIds);
-			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, Mat::zeros(1,4, CV_64F), rvecs, tvecs);
-			
-			for (int k = 0; k < markerCorners.size(); k++)
-			{
-				std::cout << "markerCorners: " << markerCorners[k] << std::endl;
-			}
+			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, Mat::zeros(1,4, CV_64F), rvecs, tvecs);	
+
 			//Check if the Origin Marker was detected
 			int originIndex = -1;
 			Vec3d coordOrigin;
@@ -204,23 +165,6 @@ int detectMarkers()
 						//Draw Axis of detected marker
 						cv::aruco::drawAxis(imageUndistorted, camMatrix, Mat::zeros(1,4,CV_64F), rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
 
-#if SHIFT_POINT_TO_CENTER
-						//Calculate Center using moments
-						//cv::Moments mu = cv::moments(markerCorners[i]);
-						//uv = cv::Mat::ones(3, 1, cv::DataType<double>::type);
-						//uv.at<double>(0, 0) = mu.m10 / mu.m00;
-						//uv.at<double>(1, 0) = mu.m01 / mu.m00;
-						//uv.at<double>(2, 0) = 1;
-						//std::cout << "UV(1): " << uv.at<double>(0, 0) << std::endl;
-						//std::cout << "UV(2): " << uv.at<double>(1, 0) << std::endl;
-						//std::cout << "UV(3): " << uv.at<double>(2, 0) << std::endl;
-
-#else
-						//Use top left corner
-						uv.at<double>(0, 0) = markerCorners[0].x;
-						uv.at<double>(1, 0) = markerCorners[0].y;
-						uv.at<double>(2, 0) = 1;
-#endif
 						//Copy translation vector tvec to cv::Mat object t
 						t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
 						t.at<double>(0, 0) = tvecs[i][0];
@@ -229,97 +173,75 @@ int detectMarkers()
 
 						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
 						marker[markerIds[i]] = t;
-
 					}
 				}
 
 #if PRINT_WORLD_COORDS
-
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{
 					if (i != originIndex)
 					{
+
 						std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
 						std::cout << " | Phi: " << phi[markerIds[i]] * 180 / M_PI << std::endl;
 					}
 				}
-
-
 #endif
 
 
 #if SERIAL_TRANSMIT
-
 				composeSerialMessage(message, marker, phi);
-
-				//Send Message to COM Port
 				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
 
 #endif
 #if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
-					//if (!marker[i].empty())
 					cout << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
 				}
 #endif
-				
-
 #if PRINT_COORDS_TO_CSV
 				long double timestamp = 0.0;
-
 				if ((markerIds.size() > 1))
 				{
 #if CSV_SAVE_ID		
-
 					if (recState == REC)
 					{
 						if (startTime == 0)
 						{
 							startTime = clock();
 						}
-
 						elapsedTime = clock() - startTime;
 						timestamp = (long double)elapsedTime / (long double)(CLOCKS_PER_SEC * 100.0);
-
 						for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 						{
 							writeMsgToCSV((int16_t *)message, MAX_MSG_LENGTH, timestamp, &outputFile);
-
 						}
-
-						
 					}
 #else
 					writeCoordsToCSV(marker[0], CSV_NO_ID);
 #endif
 				}
 #endif
-			
-
 			}
 		}
 		else
 		{
 			putText(imageUndistorted, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
-
 #if SHOW_FRAME_CENTER
 		circle(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 #endif
-
 #if SHOW_FRAME_COORD_SYS
 		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
 		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
-
 		//End loop by pressing "e"
 		char c = waitKey(MS_BETWEEN_FRAMES);
 		if (101 == c || 69 == c)
 		{
 			break;
 		}
-
 		//Send start message by pressing "r"
 		if (114 == c || 82 == c)
 		{
@@ -327,24 +249,9 @@ int detectMarkers()
 			sendState = STATE_READY;
 			currentMsg = "READY";
 
-			//Send Message to COM Port
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "READY" << endl;
 		}
-#if 0
-		//Send start message by pressing "s"
-		if (115 == c || 83 == c)
-		{
-			uint16_t message = VAR_START;
-			sendState = STATE_RUN;
-			currentMsg = "START";
-
-			//Send Message to COM Port
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
-			cout << "START" << endl;
-		}
-
-#endif
 		//Send stop message by pressing "i"
 		if (105 == c || 73 == c)
 		{
@@ -352,7 +259,6 @@ int detectMarkers()
 			uint16_t message = VAR_STOP;
 			currentMsg = "IDLE";
 
-			//Send Message to COM Port
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "STOP" << endl;
 		}
@@ -367,7 +273,7 @@ int detectMarkers()
 				recState = REC;
 				recMsg = "RECORDING...";
 			}
-			//Send Message to COM Port
+
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << "Start Next Transition" << endl;
 		}
@@ -402,36 +308,27 @@ int detectMarkers()
 #endif
 
 		/* Show Config Messages on the Screen */
-		String readyMsg = "Press 'r' to enter READY";
-		//String startMsg = "Press 's' to START";
-		String stopMsg = "Press 'i' to reset to IDLE";
-		String transMsg = "Press 't' to start next Transition";
-		String exitMsg = "Press 'e' to EXIT Program";
+		String readyMsg     = "Press 'r' to enter READY";
+		String stopMsg      = "Press 'i' to reset to IDLE";
+		String transMsg     = "Press 't' to start next Transition";
+		String exitMsg      = "Press 'e' to EXIT Program";
 		String undistortMsg = "Press 'g' to toggle Distortion";
-		putText(imageUndistorted, readyMsg, Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		//putText(imageUndistorted, startMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, stopMsg, Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, transMsg, Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, readyMsg,					 Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, stopMsg,					 Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, transMsg,					 Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, undistortMsg,				 Point(20, 150),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, exitMsg,					 Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, String("Current State: "), Point(400, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(imageUndistorted, currentMsg,				 Point(600, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(imageUndistorted, recMsg,					 Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
-		putText(imageUndistorted, undistortMsg, Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-
-		putText(imageUndistorted, exitMsg, Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-
-
-		putText(imageUndistorted, String("Current State: "), Point(400, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, currentMsg, Point(600, 90), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-
-		putText(imageUndistorted, recMsg, Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-
-		//Set Window
-		namedWindow("Detected Markers", WINDOW_AUTOSIZE | CV_GUI_EXPANDED);
 #if SHOW_FINAL_IMAGE
+		//Set Window
+		namedWindow("Detected Markers", WINDOW_NORMAL | CV_GUI_EXPANDED);
 		//Draw image
 		imshow("Detected Markers", imageUndistorted);
 #endif
 	}
-
 	inputVideo1.release();
-
 	return returnCode;
 }
