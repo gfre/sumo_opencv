@@ -7,7 +7,6 @@
 #include "arucoFunc.h"
 #include "detect.h"
 #include "fileOutput.h"
-#include "reconstruct3d.h"
 #include "serial.h"
 #include "stitcher.h"
 #include "config.h"
@@ -17,30 +16,32 @@
 
 
 /* GLOBAL VARIABLES */
-String currentMsg = "IDLE";
-String recMsg = "";
+String currentMsg            = "IDLE";
+String recMsg                = "";
 static sendState_t sendState = STATE_IDLE;
-static recState_t recState = NO_REC;
-static clock_t elapsedTime = 0;
-static clock_t startTime = 0;
-static bool undistortImage = true;
-
+static recState_t recState   = NO_REC;
+static clock_t elapsedTime   = 0;
+static clock_t startTime     = 0;
+static bool undistortImage   = true;
 static uint16_t message[MAX_MSG_LENGTH];
 
 int detectMarkers()
 {
+	//Camera Parameter xml configuration file
+	string configFile = CALIB_FILE_NAME;
+	ofstream outputFile;
+	cv::Mat camMatrix, invCamMatrix, distCoeffs;
 	int returnCode = ERR_OK;
+	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
+	VideoCapture inputVideo;
+
 #if CSV_REMOVE_AT_START
 	removeCSVFile();
 #endif
 
-	//Camera Parameter xml configuration file
-	string configFile = CALIB_FILE_NAME;
-	ofstream outputFile;
 	outputFile.open(CSV_OUTPUT_FILENAME, ios::out | ios::app);
 
 	// Open Camera Parameter File
-	cv::Mat camMatrix, invCamMatrix, distCoeffs;
 	if (ERR_OK != readCameraParameters(configFile, camMatrix, distCoeffs))
 	{
 		cerr << "Invalid camera file" << endl;
@@ -57,23 +58,17 @@ int detectMarkers()
 	cout << "============================================" << endl << endl << endl;
 #endif
 
-	// Set Aruco Dictionary
-	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 
-	//Webcam
-	VideoCapture inputVideo1;
 
 	//Select Webcams
-	inputVideo1.open(FIRST_CAM_ID);
+	inputVideo.open(0);
 
 	//Set Resolution
-	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	inputVideo1.set(CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH);
+	inputVideo.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	inputVideo.set(CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH);
 
-	//initialize Mat objects
-	Mat image1, imageDetected;
-
-
+	//initialize at objects
+	Mat image;
 
 #if ENABLE_REC
 	//Initialize Videowriter
@@ -85,7 +80,7 @@ int detectMarkers()
 	Mat vidSizeImg;
 
 	//Save on image to get size
-	inputVideo1 >> vidSizeImg;
+	inputVideo >> vidSizeImg;
 
 	bool isColor = (vidSizeImg.type() == CV_8UC3);
 
@@ -97,27 +92,16 @@ int detectMarkers()
 
 #endif
 
-
-
 	//Grab frames continuously if at least one webcam is connected
-	while (inputVideo1.grab())
+	while (inputVideo.grab())
 	{
-		inputVideo1.retrieve(image1);
-		image1.copyTo(imageDetected);
+		inputVideo.retrieve(image);
 #if ENABLE_REC
 		if (recState == REC)
 		{
-			vidWriter.write(image1);
+			vidWriter.write(image);
 		}
 #endif
-		//Undistort Image if needed
-		Mat imageUndistorted;
-		imageDetected.copyTo(imageUndistorted);
-		if (undistortImage) 
-		{
-			undistort(imageDetected, imageUndistorted, camMatrix, distCoeffs);
-		}
-		
 		//Initialize Variables
 		vector<int> markerIds;
 		vector<vector<Point2f>> markerCorners;
@@ -134,36 +118,29 @@ int detectMarkers()
 		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
 
 		//Detect Marker corners
-		aruco::detectMarkers(imageUndistorted, dictionary, markerCorners, markerIds, param);
+		aruco::detectMarkers(image, dictionary, markerCorners, markerIds, param);
 
 		//Only proceed if at least 1 marker was detected
 		if (markerIds.size() > 0)
 		{
-			aruco::drawDetectedMarkers(imageUndistorted, markerCorners, markerIds);
-			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, Mat::zeros(1,4, CV_64F), rvecs, tvecs);	
+			aruco::drawDetectedMarkers(image, markerCorners, markerIds);
+			// Estimate poses from image
+			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);	
 
-			//Check if the Origin Marker was detected
-			int originIndex = -1;
-			Vec3d coordOrigin;
-			Mat xyzOrigin = Mat::ones(3, 1, DataType<double>::type);
-
-			if ((ERR_OK != getOriginXYZ(markerIds, originIndex, rvecs, tvecs, invCamMatrix, markerCorners, xyzOrigin)) & USE_REL_COORDS)
-			{
-				putText(imageUndistorted, ERR_STR_NO_ORIGIN, Point(800, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
-			}
-			else
-			{
 				for (size_t i = 0; i < markerIds.size(); i++)
 				{
-					if (i != originIndex)
-					{
-						cv::Mat uv, XYZ, a, b, t, rotMatrix, invRotMatrix;
-						double s = 0.0;
+						cv::Mat t, rotMatrix, invRotMatrix;
+
+						// Compose rotation matrix from rotation vector
 						Rodrigues(rvecs[i], rotMatrix);
+						// Inverse is its transpose
 						invRotMatrix = rotMatrix.t();
+#if PRINT_ROT_MATRIX
+						cout << "Rot Matrix: " << rotMatrix << endl;
+#endif
 
 						//Draw Axis of detected marker
-						cv::aruco::drawAxis(imageUndistorted, camMatrix, Mat::zeros(1,4,CV_64F), rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
+						cv::aruco::drawAxis(image, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
 
 						//Copy translation vector tvec to cv::Mat object t
 						t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
@@ -171,20 +148,15 @@ int detectMarkers()
 						t.at<double>(1, 0) = tvecs[i][1];
 						t.at<double>(2, 0) = tvecs[i][2];
 
-						getEulerAngleFromRotMatrix(rotMatrix, markerIds[i], phi);
+						phi[markerIds[i]]    = atan2(rotMatrix.at<double>(0, 1), -rotMatrix.at<double>(0, 0));
 						marker[markerIds[i]] = t;
-					}
 				}
 
 #if PRINT_WORLD_COORDS
 				for (size_t i = 0; i < (markerIds.size()); i++)
 				{
-					if (i != originIndex)
-					{
-
 						std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
 						std::cout << " | Phi: " << phi[markerIds[i]] * 180 / M_PI << std::endl;
-					}
 				}
 #endif
 
@@ -223,18 +195,17 @@ int detectMarkers()
 #endif
 				}
 #endif
-			}
 		}
 		else
 		{
-			putText(imageUndistorted, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
+			putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
 #if SHOW_FRAME_CENTER
-		circle(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
+		circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 #endif
 #if SHOW_FRAME_COORD_SYS
-		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 + 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
-		arrowedLine(imageUndistorted, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
+		arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
+		arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
 		//End loop by pressing "e"
 		char c = waitKey(MS_BETWEEN_FRAMES);
@@ -278,16 +249,6 @@ int detectMarkers()
 			cout << "Start Next Transition" << endl;
 		}
 
-		//Toggle undistortion by pressing "g"
-		if (103 == c || 71 == c)
-		{
-			if (undistortImage) {
-				undistortImage = false;
-			} else {
-				undistortImage = true;
-			}
-		}
-
 #if ENABLE_REC
 		//record by pressing "w"
 		if (119 == c || 87 == c)
@@ -312,23 +273,21 @@ int detectMarkers()
 		String stopMsg      = "Press 'i' to reset to IDLE";
 		String transMsg     = "Press 't' to start next Transition";
 		String exitMsg      = "Press 'e' to EXIT Program";
-		String undistortMsg = "Press 'g' to toggle Distortion";
-		putText(imageUndistorted, readyMsg,					 Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, stopMsg,					 Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, transMsg,					 Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, undistortMsg,				 Point(20, 150),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, exitMsg,					 Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, String("Current State: "), Point(400, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(imageUndistorted, currentMsg,				 Point(600, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-		putText(imageUndistorted, recMsg,					 Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(image, readyMsg,				  Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, stopMsg,					  Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, transMsg,			      Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, exitMsg,					  Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, String("Current State: "), Point(400, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, currentMsg,				  Point(600, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(image, recMsg,					  Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 
 #if SHOW_FINAL_IMAGE
 		//Set Window
 		namedWindow("Detected Markers", WINDOW_NORMAL | CV_GUI_EXPANDED);
 		//Draw image
-		imshow("Detected Markers", imageUndistorted);
+		imshow("Detected Markers", image);
 #endif
 	}
-	inputVideo1.release();
+	inputVideo.release();
 	return returnCode;
 }
