@@ -169,7 +169,11 @@ int detectMarkers()
 #if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
-					cout << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
+					if ( ( VAR_INVALID != message[3 * i] ) && (VAR_INVALID != message[3 * i + 1]) && (VAR_INVALID != message[3 * i]) && (VAR_INVALID != message[3 * i + 2]) )
+						cout << "ID = " << i << " || x = " << std::dec << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
+					else
+						cout << "ID = " << i << " || x = 0x" << std::hex << (int16_t)message[3 * i] << " | y = 0x" << std::hex << (int16_t)message[3 * i + 1] << " | phi = 0x" << std::hex << (int16_t)message[3 * i + 2] << endl;
+						
 				}
 #endif
 #if PRINT_COORDS_TO_CSV
