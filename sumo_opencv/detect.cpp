@@ -8,7 +8,6 @@
 #include "detect.h"
 #include "fileOutput.h"
 #include "serial.h"
-#include "stitcher.h"
 #include "config.h"
 /* SYSTEM INCLUDES */
 #include <cmath>
@@ -16,7 +15,7 @@
 
 
 /* GLOBAL VARIABLES */
-String currentMsg            = "IDLE";
+std::string currentMsg       = "IDLE";
 String recMsg                = "";
 static sendState_t sendState = STATE_IDLE;
 static recState_t recState   = NO_REC;
@@ -47,18 +46,13 @@ int detectMarkers()
 		cerr << "Invalid camera file" << endl;
 		returnCode = ERR_INV_PARAM_FILE;
 	}
-	invCamMatrix = camMatrix.inv();
 
 #if PRINT_INTR_PARA
 	cout << "Camera Matrix: " << camMatrix << endl;
 	cout << "------------------------------------------" << endl;
-	cout << "Inv Camera Matrix: " << invCamMatrix << endl;
-	cout << "------------------------------------------" << endl;
 	cout << "Distortion coefficients: " << distCoeffs << endl;
 	cout << "============================================" << endl << endl << endl;
 #endif
-
-
 
 	//Select Webcams
 	inputVideo.open(0);
@@ -70,8 +64,7 @@ int detectMarkers()
 	//initialize at objects
 	Mat image;
 
-#if ENABLE_REC
-	//Initialize Videowriter
+#if (MANUAL_REC || AUTO_REC)
 	VideoWriter vidWriter;
 
 	int codec = CV_FOURCC('M', 'J', 'P', 'G');
@@ -96,7 +89,7 @@ int detectMarkers()
 	while (inputVideo.grab())
 	{
 		inputVideo.retrieve(image);
-#if ENABLE_REC
+#if (MANUAL_REC || AUTO_REC)
 		if (recState == REC)
 		{
 			vidWriter.write(image);
@@ -110,12 +103,13 @@ int detectMarkers()
 		map<int, Mat> marker;
 		map<int, Vec3d> markerTvecs;
 		map<int, double> phi;
+		static int trnstnCnt = 1;
 
 		// Corner detection parameters
 		const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
-		param->cornerRefinementWinSize = CR_WIN_SIZE;
-		param->cornerRefinementMaxIterations = CR_MAX_ITERATIONS;
-		param->cornerRefinementMinAccuracy = CR_MIN_ACCURACY;
+		param->cornerRefinementWinSize              = CR_WIN_SIZE;
+		param->cornerRefinementMaxIterations		= CR_MAX_ITERATIONS;
+		param->cornerRefinementMinAccuracy			= CR_MIN_ACCURACY;
 
 		//Detect Marker corners
 		aruco::detectMarkers(image, dictionary, markerCorners, markerIds, param);
@@ -129,17 +123,15 @@ int detectMarkers()
 
 				for (size_t i = 0; i < markerIds.size(); i++)
 				{
-						cv::Mat t, rotMatrix, invRotMatrix;
+						cv::Mat t, rotMatrix;
 
 						// Compose rotation matrix from rotation vector
 						Rodrigues(rvecs[i], rotMatrix);
-						// Inverse is its transpose
-						invRotMatrix = rotMatrix.t();
 #if PRINT_ROT_MATRIX
 						cout << "Rot Matrix: " << rotMatrix << endl;
 #endif
 
-						//Draw Axis of detected marker
+						//Draw axes of detected marker
 						cv::aruco::drawAxis(image, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
 
 						//Copy translation vector tvec to cv::Mat object t
@@ -170,10 +162,9 @@ int detectMarkers()
 				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
 				{
 					if ( ( VAR_INVALID != message[3 * i] ) && (VAR_INVALID != message[3 * i + 1]) && (VAR_INVALID != message[3 * i]) && (VAR_INVALID != message[3 * i + 2]) )
-						cout << "ID = " << i << " || x = " << std::dec << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
+						cout << std::dec << "ID = " << i << " || x = " <<  (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
 					else
 						cout << "ID = " << i << " || x = 0x" << std::hex << (int16_t)message[3 * i] << " | y = 0x" << std::hex << (int16_t)message[3 * i + 1] << " | phi = 0x" << std::hex << (int16_t)message[3 * i + 2] << endl;
-						
 				}
 #endif
 #if PRINT_COORDS_TO_CSV
@@ -204,58 +195,79 @@ int detectMarkers()
 		{
 			putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
-#if SHOW_FRAME_CENTER
+#if (SHOW_FRAME_CENTER && SHOW_FINAL_IMAGE)
 		circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 #endif
-#if SHOW_FRAME_COORD_SYS
+#if (SHOW_FRAME_COORD_SYS && SHOW_FINAL_IMAGE)
 		arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
 		arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 #endif
-		//End loop by pressing "e"
+		//End program by pressing "e"
 		char c = waitKey(MS_BETWEEN_FRAMES);
-		if (101 == c || 69 == c)
+		if ( ('E' == c) || ('e' == c) )
 		{
 			break;
 		}
-		//Send start message by pressing "r"
-		if (114 == c || 82 == c)
+		//Invoke software reset by pressing 'r'
+		if (('R' == c) || ('r' == c))
+		{
+			uint16_t message = VAR_SWRESET;
+			currentMsg = "SW RESET";
+
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			cout << currentMsg << endl;
+		}
+		//Go to IDLE application state by pressing 'i'
+		if (('I' == c) || ('i' == c))
+		{
+			sendState = STATE_IDLE;
+			uint16_t message = VAR_IDLE;
+			currentMsg = "IDLE";
+
+			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			cout << currentMsg << endl;
+		}
+		//Go to normal application state by pressing 's'
+		if ( ('S' == c) || ('s' == c) )
 		{
 			uint16_t message = VAR_READY;
 			sendState = STATE_READY;
 			currentMsg = "READY";
 
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
-			cout << "READY" << endl;
+			cout << currentMsg << endl;
 		}
-		//Send stop message by pressing "i"
-		if (105 == c || 73 == c)
-		{
-			sendState = STATE_IDLE;
-			uint16_t message = VAR_STOP;
-			currentMsg = "IDLE";
-
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
-			cout << "STOP" << endl;
-		}
-
-		//Next Transition message by pressing "t"
-		if (116 == c || 84 == c)
+		//Start next Transition by pressing "g"
+		if ( ('G' == c) || ('g' == c) )
 		{
 			uint16_t message = VAR_TRANS;
 
-			if (recState == NO_REC && START_REC_WITH_TRANSITION)
+			if ( (recState == NO_REC) && AUTO_REC)
 			{
 				recState = REC;
 				recMsg = "RECORDING...";
 			}
+			// If last state was also transition, increment transition counter, reset it otherwise
+			if ( ("IDLE" != currentMsg) && ("SW RESET" != currentMsg) && ("READY" != currentMsg) )
+			{
+				trnstnCnt++;
+			}
+			else
+			{
+				trnstnCnt = 1;
+			}
+			// Append count to current message
+			std::string s = std::to_string(trnstnCnt);
+			currentMsg = "TRANSITION ";
+			currentMsg.append(s);
 
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
-			cout << "Start Next Transition" << endl;
+			cout << currentMsg << endl;
 		}
 
-#if ENABLE_REC
-		//record by pressing "w"
-		if (119 == c || 87 == c)
+#if MANUAL_REC
+		//Record by pressing "w"
+		if ('W' == c || 'w' == c)
 		{
 			if (recState == NO_REC)
 			{
@@ -272,20 +284,27 @@ int detectMarkers()
 		}
 #endif
 
-		/* Show Config Messages on the Screen */
-		String readyMsg     = "Press 'r' to enter READY";
-		String stopMsg      = "Press 'i' to reset to IDLE";
-		String transMsg     = "Press 't' to start next Transition";
-		String exitMsg      = "Press 'e' to EXIT Program";
-		putText(image, readyMsg,				  Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(image, stopMsg,					  Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(image, transMsg,			      Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(image, exitMsg,					  Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(image, String("Current State: "), Point(400, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-		putText(image, currentMsg,				  Point(600, 90),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-		putText(image, recMsg,					  Point(600, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+
 
 #if SHOW_FINAL_IMAGE
+		// Show Config Messages on the Screen
+		putText(image, "Press 'r' to invoke software reset",			Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "Press 'i' to reset to IDLE application state",	Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "Press 's' to enter NORMAL application state",	Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "Press 'g' to start next Transition",			Point(20, 150),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+#if MANUAL_REC
+		putText(image, "Press 'w' to start recording",					Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "Press 'e' to EXIT Program",						Point(20, 230),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "CURRENT STATE: ",								Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, currentMsg,										Point(620, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(image, recMsg,											Point(400, 310), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+#else
+		putText(image, "Press 'e' to EXIT Program",						Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, "CURRENT STATE: ",								Point(400, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
+		putText(image, currentMsg,										Point(620, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+		putText(image, recMsg,											Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+#endif
+
 		//Set Window
 		namedWindow("Detected Markers", WINDOW_NORMAL | CV_GUI_EXPANDED);
 		//Draw image
