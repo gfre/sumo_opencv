@@ -175,9 +175,9 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 				if (phiTemp > M_PI) phiTemp = -M_PI + (phiTemp - M_PI);
 				double phiDeg = phiTemp * 180 / M_PI;
 
-				message_[3 * i]		= (uint16_t)(xAvg);				// x - value
-				message_[3 * i + 1] = (uint16_t)(-yAvg);				// y - value
-				message_[3 * i + 2] = (uint16_t)(phiDeg);   //(phi[i] * 180 / M_PI);			// phi - value
+				message_[3 * i]		= (uint16_t)(-xAvg);				// x - value
+				message_[3 * i + 1] = (uint16_t)(yAvg);				// y - value
+				message_[3 * i + 2] = (uint16_t)(phiAvg);   //(phi[i] * 180 / M_PI);			// phi - value
 
 			}
 			else

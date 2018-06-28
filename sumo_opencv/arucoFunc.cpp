@@ -147,30 +147,15 @@ int calibrateCamera()
 	detectorParams->cornerRefinementMaxIterations = 50;
 	detectorParams->cornerRefinementMinAccuracy = 0.01;
 
-#if USE_STITCHER
-	//Open Webcam
-	VideoCapture inputVideo1, inputVideo2;
-	inputVideo1.open(FIRST_CAM_ID);
-	//Set Resolution
-	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, 1080);
-	inputVideo1.set(CAP_PROP_FRAME_WIDTH, 1920);
 
-	inputVideo2.open(SEC_CAM_ID);
-	//Set Resolution
-	inputVideo2.set(CAP_PROP_FRAME_HEIGHT, 1080);
-	inputVideo2.set(CAP_PROP_FRAME_WIDTH, 1920);
-
-	Mat H = (Mat_<double>(3, 3) << HOMOGRAPHY_M);
-#else
-
-	VideoCapture inputVideo1, inputVideo2;
+	VideoCapture inputVideo1;
 	inputVideo1.open(CHARUCO_CAM_ID);
 
 	//Set Resolution
 	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
-#endif
+
 
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(ARUCO_DICT));
 
@@ -194,25 +179,11 @@ int calibrateCamera()
 	cameraMatrix.at< double >(2, 2) = 1;
 
 
-	while (inputVideo1.grab() || inputVideo2.grab())
+	while (inputVideo1.grab())
 	{
-
-#if USE_STITCHER
-
-		Mat image, image1, image2, stitchedImage, imageCopy;
-		inputVideo1.retrieve(image1);
-		inputVideo2.retrieve(image2);
-
-		stitcher(image1, image2, &stitchedImage, H);
-
-		//Crop stitched image
-		Rect cropROI(0, 0, 1900, 1900);
-		image = stitchedImage(cropROI);
-
-#else
 		Mat image, imageCopy;
 		inputVideo1.retrieve(image);
-#endif
+
 		vector< int > ids;
 		vector< vector< Point2f > > corners, rejected;
 

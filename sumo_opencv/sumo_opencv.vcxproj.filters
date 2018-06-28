@@ -24,9 +24,6 @@
     <ClCompile Include="stitcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="reconstruct3d.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="arucoFunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,9 +42,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stitcher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="reconstruct3d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fileOutput.h">
