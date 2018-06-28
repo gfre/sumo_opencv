@@ -5,7 +5,6 @@
 #include "arucoFunc.h"
 #include "detect.h"
 #include "fileOutput.h"
-#include "reconstruct3d.h"
 #include "serial.h"
 #include "stitcher.h"
 

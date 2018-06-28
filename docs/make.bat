@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=AConopenCV
+set SPHINXPROJ=AConSumoopenCV
 
 if "%1" == "" goto help
 
