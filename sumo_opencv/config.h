@@ -24,7 +24,6 @@
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define SERIAL_TRANSMIT						(TRUE)					//Enable/Disable Serial Transmission
-#define SERIAL_READ_DATA					(TRUE)					//READ Data from Serial
 #define PRINT_SERIAL_MSG_TO_CL				(FALSE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
 
 	/* SAVE COORDINATES TO CSV */
@@ -39,7 +38,7 @@
 	/* CAMERA SETUP */
 #define FRAME_WIDTH							(2592)					//Camera image width
 #define FRAME_HEIGHT						(2048)					//Camera image height
-#define MS_BETWEEN_FRAMES					(10)					//wait 10ms before grabbing new frame, may impact performance
+#define MS_BETWEEN_FRAMES					(1)						// 0 will freeze the program until key is pressed. The larger this value, the slower data transmission 
 #define REC_FPS								(2.5)
 
 
