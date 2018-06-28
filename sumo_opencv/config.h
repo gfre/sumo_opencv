@@ -16,16 +16,16 @@
 #define MANUAL_REC							(FALSE)					//Enable manual video recordings
 #define AUTO_REC							(FALSE)					//Automatically start video capture 
 
-#define PRINT_WORLD_COORDS					(TRUE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
+#define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define PRINT_INTR_PARA						(FALSE)					//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
 #define PRINT_ROT_MATRIX					(FALSE)					//Print rotation matrix for each detected marker
-#define SHOW_FRAME_CENTER					(FALSE)					//Show principal point on image
+#define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define SERIAL_TRANSMIT						(TRUE)					//Enable/Disable Serial Transmission
 #define SERIAL_READ_DATA					(TRUE)					//READ Data from Serial
-#define PRINT_SERIAL_MSG_TO_CL				(TRUE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
+#define PRINT_SERIAL_MSG_TO_CL				(FALSE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
 
 	/* SAVE COORDINATES TO CSV */
 #define CSV_SAVE_ID							(TRUE)					//Set to true if id should be saved as well
@@ -51,7 +51,8 @@
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define ORIGIN_MARKER_ID					(25)										//Select which marker acts as the origin of world coordinate system
 #define CALIB_FILE_NAME						"camera_parameters/calibration_basler7.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
-	//Corner Refinement
+
+	/* Corner Refinement */
 #define CR_ENABLE							(true)
 #define CR_WIN_SIZE							(3)
 #define CR_MAX_ITERATIONS					(50)
@@ -75,7 +76,7 @@
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)					//Show detected Charuco Corners on Image
 
 	/* CONSTANTS */
-#define MOVING_AVG_SAMPLES					(3)						// Amount of measurements used in Moving Average
+#define MOVING_AVG_SAMPLES					(1)						// Amount of measurements used in Moving Average
 
 	/* ERROR CODES */
 #define ERR_OK								(0u)	
@@ -88,6 +89,7 @@
 #define CHARUCO_ERR_NOT_ENOUGH_CORNERS		(6u)
 #define CHARUCO_ERR_CALIB_FILE				(7u)
 
+/* Commands that are sent to Sumos */
 #define VAR_INVALID							(0x8000u)				//Send this instead of coordinates if marker was not detected
 #define VAR_SWRESET							(0x7F00u)				//Invoke software reset
 #define VAR_IDLE							(0x7F11u)				//Go to IDLE application state 
