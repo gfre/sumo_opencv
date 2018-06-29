@@ -24,8 +24,8 @@
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define SERIAL_TRANSMIT						(TRUE)					//Enable/Disable Serial Transmission
-#define SERIAL_READ_DATA					(TRUE)					//READ Data from Serial
-#define PRINT_SERIAL_MSG_TO_CL				(FALSE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
+#define SERIAL_READ_DATA					(FALSE)					//READ Data from Serial
+#define PRINT_SERIAL_MSG_TO_CL				(TRUE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
 
 	/* SAVE COORDINATES TO CSV */
 #define CSV_SAVE_ID							(TRUE)					//Set to true if id should be saved as well
