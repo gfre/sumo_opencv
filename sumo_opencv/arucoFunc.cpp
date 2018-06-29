@@ -9,7 +9,6 @@
 
 /* PROJECT INCLUDES */
 #include "config.h"
-#include "stitcher.h"
 
 using namespace cv;
 using namespace std;
