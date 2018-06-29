@@ -16,7 +16,7 @@
 #define MANUAL_REC							(FALSE)					//Enable manual video recordings
 #define AUTO_REC							(FALSE)					//Automatically start video capture 
 
-#define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
+#define PRINT_WORLD_COORDS					(TRUE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File
 #define PRINT_INTR_PARA						(FALSE)					//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
 #define PRINT_ROT_MATRIX					(FALSE)					//Print rotation matrix for each detected marker
@@ -40,7 +40,7 @@
 #define FRAME_HEIGHT						(2048)					//Camera image height
 #define MS_BETWEEN_FRAMES					(1)						// 0 will freeze the program until key is pressed. The larger this value, the slower data transmission 
 #define REC_FPS								(2.5)
-
+#define CROPPED_IMAGE_SAFETY_ZONE			(50)					// This value in pixels will be added to the cropped image
 
 	/* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary

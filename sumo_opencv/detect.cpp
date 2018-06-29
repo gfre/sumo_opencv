@@ -22,7 +22,6 @@ static sendState_t sendState = STATE_IDLE;
 static recState_t recState   = NO_REC;
 static clock_t elapsedTime   = 0;
 static clock_t startTime     = 0;
-static bool undistortImage   = true;
 static uint16_t message[MAX_MSG_LENGTH];
 
 
@@ -45,9 +44,19 @@ int detectMarkers()
 	int returnCode = ERR_OK;
 	string configFile = CALIB_FILE_NAME;
 	ofstream outputFile;
-	cv::Mat image, camMatrix, invCamMatrix, distCoeffs;
+	cv::Mat image, pCroppedImage, camMatrix, invCamMatrix, distCoeffs;
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 	VideoCapture inputVideo;
+	vector<int> markerIds;
+	vector<vector<Point2f>> origMarkerCorners, markerCorners ;
+	vector<Vec3d> rvecs, tvecs;
+	map<int, Mat> marker;
+	map<int, double> phi;
+	static int trnstnCnt = 1;
+	float min_x = (float)FRAME_WIDTH, min_y = (float)FRAME_HEIGHT;
+	float max_x = 0.0, max_y = 0.0;
+	int newWidth, newHeight, newOrig_x = 0, newOrig_y = 0, newEnd_x, newEnd_y;
+
 
 	#if CSV_REMOVE_AT_START
 		removeCSVFile();
@@ -96,59 +105,101 @@ int detectMarkers()
 		}
 
 	#endif
-	//Initialize Variables
-	vector<int> markerIds;
-	vector<vector<Point2f>> markerCorners;
-	vector<Vec3d> rvecs, tvecs;
 
-	map<int, Mat> marker;
-	map<int, double> phi;
-	static int trnstnCnt = 1;
+
 
 	// Corner detection parameters
 	const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
 	param->cornerRefinementMethod = 0;
-	//param->cornerRefinementWinSize              = CR_WIN_SIZE;
-	//param->cornerRefinementMaxIterations		= CR_MAX_ITERATIONS;
-	//param->cornerRefinementMinAccuracy			= CR_MIN_ACCURACY;
+	//param->cornerRefinementWinSize		= CR_WIN_SIZE;
+	//param->cornerRefinementMaxIterations	= CR_MAX_ITERATIONS;
+	//param->cornerRefinementMinAccuracy	= CR_MIN_ACCURACY;
 
-//	if (inputVideo.read(image))
-//	{
-		//Detect Marker corners
-//		aruco::detectMarkers(image, dictionary, markerCorners, markerIds, param);
-		//determine cropped image size
-//		for (int k = 0; k < markerCorners.size; k++)
-//		{
-//			for each (vector<Point2f> vec in markerCorners)
-//			{
-//
-//			}
-//		}
-//	}
+	int sftyCnt = 0; //to make sure camera captures all sumos in first iteration
+	while( !(markerIds.size() > 0) && sftyCnt <= 20 )
+	{
+		if (inputVideo.read(image))
+		{
+			aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
+			if (markerIds.size() > 0)
+			{
+				//Determine cropped image size
+				for (int k = 0; k < origMarkerCorners.size(); k++)
+				{
+					for (int l = 0; l < origMarkerCorners[k].size(); l++)
+					{
+						min_x = MIN(min_x, origMarkerCorners[k][l].x);
+						min_y = MIN(min_y, origMarkerCorners[k][l].y);
+						max_x = MAX(max_x, origMarkerCorners[k][l].x);
+						max_y = MAX(max_y, origMarkerCorners[k][l].y);
+					}
+				}
+
+				newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
+				newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
+				newEnd_x  = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
+				newEnd_y  = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
+				newWidth  = newEnd_x - newOrig_x;
+				newHeight = newEnd_y - newOrig_y;
+
+				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+				cv::imshow("Cropped image", pCroppedImage);
+				waitKey(0);
+			}
+		}
+		inputVideo.release();
+		sftyCnt++;
+	}
 
 	//Grab frames continuously
 	while (inputVideo.read(image))
 	{
-		tic();
 		#if (MANUAL_REC || AUTO_REC)
 			if (recState == REC)
 			{
 				vidWriter.write(image);
 			}
 		#endif
-		// Detect Marker corners
-		aruco::detectMarkers(image, dictionary, markerCorners, markerIds, param);
+		// Detect Marker corners in cropped image (= original image when called for the first time)
+		aruco::detectMarkers(pCroppedImage, dictionary, markerCorners, markerIds, param);
+		//Determine cropped image size
+		for (int k = 0; k < markerCorners.size(); k++)
+		{
+			for (int l = 0; l < markerCorners[k].size(); l++)
+			{
+				min_x = MIN(min_x, markerCorners[k][l].x);
+				min_y = MIN(min_y, markerCorners[k][l].y);
+				max_x = MAX(max_x, markerCorners[k][l].x);
+				max_y = MAX(max_y, markerCorners[k][l].y);
+			}
+		}
+		newWidth  = (int)(max_x - min_x) + 2 * CROPPED_IMAGE_SAFETY_ZONE;
+		newHeight = (int)(max_y - min_y) + 2 * CROPPED_IMAGE_SAFETY_ZONE;
+		/* This is always relative to the old origin */
+		newOrig_x = ((int)min_x - CROPPED_IMAGE_SAFETY_ZONE);
+		newOrig_y = ((int)min_y - CROPPED_IMAGE_SAFETY_ZONE);
+		pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 
-		//cv::Mat croppedImage = image(Rect(X, Y, Width, Height));
+
+
+		// Keep original markerCorners up to date (add new origin: [newOrig_x newOrig_y]')
+		for (int k = 0; k < markerCorners.size(); k++)
+		{
+			for (int l = 0; l < markerCorners[k].size(); l++)
+			{
+				origMarkerCorners[k][l].x = markerCorners[k][l].x + (min_x - (float)CROPPED_IMAGE_SAFETY_ZONE);
+				origMarkerCorners[k][l].y = markerCorners[k][l].x + (min_y - (float)CROPPED_IMAGE_SAFETY_ZONE);
+			}
+		}
 
 		//Only proceed if at least 1 marker was detected
 		if (markerIds.size() > 0)
 		{
 			
-			aruco::drawDetectedMarkers(image, markerCorners, markerIds);
+			aruco::drawDetectedMarkers(image, origMarkerCorners, markerIds);
 
 			// Estimate poses from image
-			aruco::estimatePoseSingleMarkers(markerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);	
+			aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);	
 
 
 
@@ -230,19 +281,19 @@ int detectMarkers()
 		}
 		else
 		{
-			putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
+			cv::putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
 		#if (SHOW_FRAME_CENTER && SHOW_FINAL_IMAGE)
 			circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 		#endif
 		#if (SHOW_FRAME_COORD_SYS && SHOW_FINAL_IMAGE)
-			arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
-			arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
+			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
+			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 		#endif
 
 		//End program by pressing "e"
 		char c = waitKey(MS_BETWEEN_FRAMES);
-		if ( ('E' == c) || ('e' == c) )
+		if (('E' == c) || ('e' == c))
 		{
 			break;
 		}
@@ -266,7 +317,7 @@ int detectMarkers()
 			cout << currentMsg << endl;
 		}
 		//Go to normal application state by pressing 's'
-		if ( ('S' == c) || ('s' == c) )
+		if (('S' == c) || ('s' == c))
 		{
 			uint16_t message = VAR_READY;
 			sendState = STATE_READY;
@@ -276,11 +327,11 @@ int detectMarkers()
 			cout << currentMsg << endl;
 		}
 		//Start next Transition by pressing "g"
-		if ( ('G' == c) || ('g' == c) )
+		if (('G' == c) || ('g' == c))
 		{
 			uint16_t message = VAR_TRANS;
 
-			if ( (recState == NO_REC) && AUTO_REC)
+			if ((recState == NO_REC) && AUTO_REC)
 			{
 				recState = REC;
 				recMsg = "RECORDING...";
@@ -300,7 +351,7 @@ int detectMarkers()
 			currentMsg.append(s);
 
 			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
-			cout << currentMsg << endl;
+			cout << currentMsg << std::endl;
 		}
 
 		#if MANUAL_REC
@@ -347,7 +398,6 @@ int detectMarkers()
 			//Draw image
 			imshow("Detected Markers", image);
 		#endif
-			toc();
 	}
 	inputVideo.release();
 	return returnCode;
