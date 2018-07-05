@@ -1,25 +1,24 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<calibration_time>"Thu May 17 13:53:09 2018"</calibration_time>
+<calibration_time>"Thu Jul  5 14:43:41 2018"</calibration_time>
 <image_width>2592</image_width>
 <image_height>2048</image_height>
 <aspectRatio>1.</aspectRatio>
-<flags>16390</flags>
+<flags>16527</flags>
 <camera_matrix type_id="opencv-matrix">
   <rows>3</rows>
   <cols>3</cols>
   <dt>d</dt>
   <data>
-    4.0632129597611136e+04 0. 1296. 0. 4.0632129597611136e+04 1024. 0.
+    1.7720427796060155e+03 0. 1296. 0. 1.7720427796060155e+03 1024. 0.
     0. 1.</data></camera_matrix>
 <distortion_coefficients type_id="opencv-matrix">
   <rows>1</rows>
   <cols>14</cols>
   <dt>d</dt>
   <data>
-    -3.5501686399051060e+01 1.0296412139395856e+04
-    -8.4903028408157607e-03 6.2449212733735819e-02
-    1.0735873180760640e+01 3.7025794700935784e+01
-    -8.3830963700788707e+03 -1.0171791063789344e+01 0. 0. 0. 0. 0. 0.</data></distortion_coefficients>
-<avg_reprojection_error>6.2294165947496005e-01</avg_reprojection_error>
+    -2.7812963916716960e-01 -3.0777950745899202e-01 0. 0. 0.
+    -2.2943837660524019e-02 -4.9641175956834338e-01
+    1.6152184818316647e-03 0. 0. 0. 0. 0. 0.</data></distortion_coefficients>
+<avg_reprojection_error>6.1595421608738221e-01</avg_reprojection_error>
 </opencv_storage>

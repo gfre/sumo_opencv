@@ -44,7 +44,7 @@ int detectMarkers()
 	int returnCode = ERR_OK;
 	string configFile = CALIB_FILE_NAME;
 	ofstream outputFile;
-	cv::Mat image, pCroppedImage, camMatrix, invCamMatrix, distCoeffs;
+	cv::Mat image, undistortedImage, pCroppedImage, camMatrix, invCamMatrix, distCoeffs;
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 	VideoCapture inputVideo;
 	vector<int> markerIds;
@@ -115,37 +115,49 @@ int detectMarkers()
 	//param->cornerRefinementMaxIterations	= CR_MAX_ITERATIONS;
 	//param->cornerRefinementMinAccuracy	= CR_MIN_ACCURACY;
 
-	int sftyCnt = 0; //to make sure camera captures all sumos in first iteration
-	while( !(markerIds.size() > 0) && sftyCnt <= NUM_FIRST_DETECTION_COUNTS )
+	int maxNumOfSumos = 0;
+	//This loop makes sure that maxNumSumos is the appropriate value
+	for (int sftyCnt = 0; sftyCnt <= NUM_FIRST_DETECTION_COUNTS; sftyCnt++)
 	{
 		if (inputVideo.read(image))
 		{
 			aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
 			if (markerIds.size() > 0)
 			{
-				//Determine cropped image size
-				for (int k = 0; k < origMarkerCorners.size(); k++)
-				{
-					for (int l = 0; l < origMarkerCorners[k].size(); l++)
-					{
-						min_x = MIN(min_x, origMarkerCorners[k][l].x);
-						min_y = MIN(min_y, origMarkerCorners[k][l].y);
-						max_x = MAX(max_x, origMarkerCorners[k][l].x);
-						max_y = MAX(max_y, origMarkerCorners[k][l].y);
-					}
-				}
-				newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
-				newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
-				newEnd_x  = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
-				newEnd_y  = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
-				newWidth  = newEnd_x - newOrig_x;
-				newHeight = newEnd_y - newOrig_y;
-
-				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+				maxNumOfSumos = max(maxNumOfSumos, markerIds.size());
 			}
 		}
-		sftyCnt++;
 	}
+	//make sure that the first cropped image contains all possible sumos
+	while (inputVideo.read(image))
+	{
+		aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
+		if (markerIds.size() == maxNumOfSumos)
+		{
+			//Determine cropped image size
+			for (int k = 0; k < origMarkerCorners.size(); k++)
+			{
+				for (int l = 0; l < origMarkerCorners[k].size(); l++)
+				{
+					min_x = MIN(min_x, origMarkerCorners[k][l].x);
+					min_y = MIN(min_y, origMarkerCorners[k][l].y);
+					max_x = MAX(max_x, origMarkerCorners[k][l].x);
+					max_y = MAX(max_y, origMarkerCorners[k][l].y);
+				}
+			}
+			newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
+			newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
+			newEnd_x = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
+			newEnd_y = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
+			newWidth = newEnd_x - newOrig_x;
+			newHeight = newEnd_y - newOrig_y;
+
+			pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+			break;
+		}
+	}
+	std::cout << "max detected num of sumos: " <<maxNumOfSumos << std::endl;
+		
 
 	//Grab frames continuously
 	while (inputVideo.read(image))
@@ -160,45 +172,81 @@ int detectMarkers()
 		// Detect Marker corners in cropped image
 		aruco::detectMarkers(pCroppedImage, dictionary, markerCorners, markerIds, param);
 
-		//Only proceed if at least 1 marker was detected
+		//Proceed if at least one sumo was detected
 		if (markerIds.size() > 0)
 		{
 			origMarkerCorners = markerCorners;
-			//Update absolute position with relative values
-			for (int k = 0; k < markerIds.size(); k++)
+			//if all sumos were detected, make image as small as possible
+			if (markerIds.size() == maxNumOfSumos)
 			{
-				for (int l = 0; l < markerCorners[k].size(); l++)
+				//Update absolute position with relative values
+				for (int k = 0; k < markerIds.size(); k++) //k < maxNumSumos
 				{
-					origMarkerCorners[k][l].x = markerCorners[k][l].x + newOrig_x;
-					origMarkerCorners[k][l].y = markerCorners[k][l].y + newOrig_y;
+					for (int l = 0; l < markerCorners[k].size(); l++) // l < 4 (always)
+					{
+						origMarkerCorners[k][l].x = markerCorners[k][l].x + newOrig_x;
+						origMarkerCorners[k][l].y = markerCorners[k][l].y + newOrig_y;
+					}
 				}
+				aruco::drawDetectedMarkers(pCroppedImage, markerCorners, markerIds);
+
+				// Estimate poses from image
+				aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
+
+				min_x = (float)FRAME_WIDTH;
+				min_y = (float)FRAME_HEIGHT;
+				max_x = 0.0;
+				max_y = 0.0;
+				//Determine cropped image size
+				for (int k = 0; k < origMarkerCorners.size(); k++)
+				{
+					for (int l = 0; l < origMarkerCorners[k].size(); l++)
+					{
+						min_x = MIN(min_x, origMarkerCorners[k][l].x);
+						min_y = MIN(min_y, origMarkerCorners[k][l].y);
+						max_x = MAX(max_x, origMarkerCorners[k][l].x);
+						max_y = MAX(max_y, origMarkerCorners[k][l].y);
+					}
+				}
+				newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
+				newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
+				newEnd_x = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
+				newEnd_y = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
+				newWidth = newEnd_x - newOrig_x;
+				newHeight = newEnd_y - newOrig_y;
+
+				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 			}
-			aruco::drawDetectedMarkers(pCroppedImage, markerCorners, markerIds);
-
-			// Estimate poses from image
-			aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);	
-
-			min_x = (float)FRAME_WIDTH, min_y = (float)FRAME_HEIGHT;
-			max_x = 0.0, max_y = 0.0;
-			//Determine cropped image size
-			for (int k = 0; k < origMarkerCorners.size(); k++)
+			// if not all sumos were detected, make take last image where all sumos were detected
+			else if (markerIds.size() < maxNumOfSumos)
 			{
-				for (int l = 0; l < origMarkerCorners[k].size(); l++)
+				//Update absolute position with relative values
+				for (int k = 0; k < markerIds.size(); k++) //k < maxNumSumos
 				{
-					min_x = MIN(min_x, origMarkerCorners[k][l].x);
-					min_y = MIN(min_y, origMarkerCorners[k][l].y);
-					max_x = MAX(max_x, origMarkerCorners[k][l].x);
-					max_y = MAX(max_y, origMarkerCorners[k][l].y);
+					for (int l = 0; l < markerCorners[k].size(); l++) // l < 4 (always)
+					{
+						origMarkerCorners[k][l].x = markerCorners[k][l].x + newOrig_x;
+						origMarkerCorners[k][l].y = markerCorners[k][l].y + newOrig_y;
+					}
 				}
-			}
-			newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
-			newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
-			newEnd_x  = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
-			newEnd_y  = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
-			newWidth  = newEnd_x - newOrig_x;
-			newHeight = newEnd_y - newOrig_y;
+				aruco::drawDetectedMarkers(pCroppedImage, markerCorners, markerIds);
 
-			pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+				// Estimate poses from image
+				aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
+
+				newOrig_x = MAX(newOrig_x - EXPAND_WINDOW, 0);
+				newOrig_y = MAX(newOrig_y - EXPAND_WINDOW, 0);
+				newEnd_x = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
+				newEnd_y = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
+				newWidth = newEnd_x - newOrig_x;
+				newHeight = newEnd_y - newOrig_y;
+				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+			}
+			else
+			{
+				maxNumOfSumos = MIN(markerIds.size(),11);
+				std::cout << "max detected num of sumos: " << maxNumOfSumos << std::endl;
+			}
 
 			for (size_t i = 0; i < markerIds.size(); i++)
 			{
@@ -393,7 +441,10 @@ int detectMarkers()
 			//Set Window
 			namedWindow("Detected Markers", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			namedWindow("Cropped Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
+			namedWindow("Undistorted Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
+			undistort(image, undistortedImage, camMatrix, distCoeffs);
 			//Draw image
+			imshow("Undistorted Image", undistortedImage);
 			imshow("Detected Markers", image);
 			imshow("Cropped Image", pCroppedImage);
 		#endif
