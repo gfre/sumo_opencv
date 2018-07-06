@@ -209,7 +209,8 @@ int calibrateCamera()
 		putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
 			Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
 
-		imshow("out", imageCopy);
+		namedWindow("Camera Calibration", WINDOW_NORMAL | CV_GUI_EXPANDED);
+		imshow("Camera Calibration", imageCopy);
 		char key = (char)waitKey(10);
 
 		if (key == 27) break;
@@ -306,8 +307,7 @@ int calibrateCamera()
 						allCharucoIds[frame]);
 				}
 			}
-
-			imshow("out", imageCopy);
+			imshow("Camera Calibration", imageCopy);
 			char key = (char)waitKey(0);
 			if (key == 27) break;
 		}
