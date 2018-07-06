@@ -328,10 +328,10 @@ int detectMarkers()
 		{
 			cv::putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
-		#if (SHOW_FRAME_CENTER && SHOW_FINAL_IMAGE)
+		#if (SHOW_FRAME_CENTER && SHOW_ORIGINAL_IMAGE)
 			circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
 		#endif
-		#if (SHOW_FRAME_COORD_SYS && SHOW_FINAL_IMAGE)
+		#if (SHOW_FRAME_COORD_SYS && SHOW_ORIGINAL_IMAGE)
 			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
 			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
 		#endif
@@ -420,7 +420,7 @@ int detectMarkers()
 
 
 
-		#if SHOW_FINAL_IMAGE
+		#if SHOW_ORIGINAL_IMAGE
 			// Show Config Messages on the Screen
 			putText(image, "Press 'r' to invoke software reset",			Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 			putText(image, "Press 'i' to reset to IDLE application state",	Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
@@ -439,13 +439,13 @@ int detectMarkers()
 				putText(image, recMsg,											Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
 			#endif
 			//Set Window
-			namedWindow("Detected Markers", WINDOW_NORMAL | CV_GUI_EXPANDED);
+			namedWindow("Original Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			namedWindow("Cropped Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			namedWindow("Undistorted Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			undistort(image, undistortedImage, camMatrix, distCoeffs);
 			//Draw image
 			imshow("Undistorted Image", undistortedImage);
-			imshow("Detected Markers", image);
+			imshow("Original Image", image);
 			imshow("Cropped Image", pCroppedImage);
 		#endif
 	toc();

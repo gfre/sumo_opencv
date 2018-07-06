@@ -10,7 +10,7 @@
 #define DETECT_MARKERS						(0x04u)					//Detect Markers
 
 	/* SELECT PROGRAM MODE */
-#define SUMO_OPENCV_MODE                    (CALIBRATE_CAMERA)
+#define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
 #define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
@@ -71,11 +71,11 @@
 #define CHARUCO_NUM_SQUARES_Y				(6)
 #define CHARUCO_SQUARE_LENGTH				(397)					//Charuco Board square length in pixel
 #define CHARUCO_MARKER_LENGTH				(283)					//Charuco Board marker length in pixel
-#define CHARUCO_SQUARE_LENGTH_M				(0.12165)				//Charuco Board square length in meter
-#define CHARUCO_MARKER_LENGTH_M				(0.09405)				//Charuco Board marker length in meter
+#define CHARUCO_SQUARE_LENGTH_M				(0.123) //(0.12165)				//Charuco Board square length in meter
+#define CHARUCO_MARKER_LENGTH_M				(0.094) //(0.09405)				//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1667)					//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)					//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler_zero_tangent_zero_k3_new_cam_pos.xml"  //Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler_zero_tangent_zero_k3.xml"  //Name of output file of generated calibration parameters
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)					//Show detected Charuco Corners on Image

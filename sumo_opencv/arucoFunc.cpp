@@ -159,7 +159,7 @@ int calibrateCamera()
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(ARUCO_DICT));
 
 	// create charuco board object
-	Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(CHARUCO_NUM_SQUARES_X, CHARUCO_NUM_SQUARES_Y, CHARUCO_SQUARE_LENGTH, CHARUCO_MARKER_LENGTH, dictionary);
+	Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(CHARUCO_NUM_SQUARES_X, CHARUCO_NUM_SQUARES_Y, CHARUCO_SQUARE_LENGTH_M, CHARUCO_MARKER_LENGTH_M, dictionary);
 	Ptr<aruco::Board> board = charucoboard.staticCast<aruco::Board>();
 
 	// collect data from each frame
