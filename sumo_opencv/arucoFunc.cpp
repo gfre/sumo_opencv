@@ -9,7 +9,6 @@
 
 /* PROJECT INCLUDES */
 #include "config.h"
-#include "stitcher.h"
 
 using namespace cv;
 using namespace std;
@@ -136,6 +135,7 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
 
 int calibrateCamera()
 {
+	static int frameCnt = 0;
 	int errorCode = ERR_OK;
 	float aspectRatio = CHARUCO_ASPECT_RATIO;
 	int calibrationFlags = CHARUCO_FLAGS;
@@ -160,7 +160,7 @@ int calibrateCamera()
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(aruco::PREDEFINED_DICTIONARY_NAME(ARUCO_DICT));
 
 	// create charuco board object
-	Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(CHARUCO_NUM_SQUARES_X, CHARUCO_NUM_SQUARES_Y, CHARUCO_SQUARE_LENGTH, CHARUCO_MARKER_LENGTH, dictionary);
+	Ptr<aruco::CharucoBoard> charucoboard = aruco::CharucoBoard::create(CHARUCO_NUM_SQUARES_X, CHARUCO_NUM_SQUARES_Y, CHARUCO_SQUARE_LENGTH_M, CHARUCO_MARKER_LENGTH_M, dictionary);
 	Ptr<aruco::Board> board = charucoboard.staticCast<aruco::Board>();
 
 	// collect data from each frame
@@ -210,7 +210,8 @@ int calibrateCamera()
 		putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
 			Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
 
-		imshow("out", imageCopy);
+		namedWindow("Camera Calibration", WINDOW_NORMAL | CV_GUI_EXPANDED);
+		imshow("Camera Calibration", imageCopy);
 		char key = (char)waitKey(10);
 
 		if (key == 27) break;
@@ -218,10 +219,16 @@ int calibrateCamera()
 		if (key == 'c' && ids.size() > 0)
 		{
 			cout << "Frame captured" << endl;
+			frameCnt++;
 			allCorners.push_back(corners);
 			allIds.push_back(ids);
 			allImgs.push_back(image);
 			imgSize = image.size();
+			std::string path = "./images/calibImage_";
+			path.append(std::to_string(frameCnt));
+			path.append(".png");
+			imwrite(path, image);
+
 		}
 	}
 
@@ -307,8 +314,7 @@ int calibrateCamera()
 						allCharucoIds[frame]);
 				}
 			}
-
-			imshow("out", imageCopy);
+			imshow("Camera Calibration", imageCopy);
 			char key = (char)waitKey(0);
 			if (key == 27) break;
 		}
