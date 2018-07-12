@@ -24,6 +24,9 @@ int readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs);
 //Function to generate Aruco Codes
 int generateAruco();
 
+//Function to capture and save images that can be used for camera calibration
+int captureSaveCalibImages();
+
 //Function to calibrate Camera using Charuco Board
 int calibrateCamera();
 

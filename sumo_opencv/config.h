@@ -6,11 +6,12 @@
 
 	/* ENABLE FEATURES */
 #define GENERATE_ARUCO_CODES				(0x01u)					//Generate and save Aruco Marker
-#define CALIBRATE_CAMERA					(0x02u)					//Calibrate Camera
-#define DETECT_MARKERS						(0x04u)					//Detect Markers
+#define CALIBRATION_CAPTURE_SAVE_IMAGES		(0x02u)					//Take and save images for camera calibration
+#define CALIBRATION_CALIBRATE_CAMERA		(0x03u)					//Calibrate camera with saved images
+#define DETECT_MARKERS						(0x04u)					//Detect markers
 
 	/* SELECT PROGRAM MODE */
-#define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
+#define SUMO_OPENCV_MODE                    (CALIBRATION_CAPTURE_SAVE_IMAGES)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
 #define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]

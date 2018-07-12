@@ -133,6 +133,46 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
 	return true;
 }
 
+int captureSaveCalibImages()
+{
+	int error = ERR_OK;
+	static int frameCnt = 0;
+
+	VideoCapture inputVideo;
+	inputVideo.open(CHARUCO_CAM_ID);
+
+	//Set Resolution
+	inputVideo.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
+	inputVideo.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
+
+	while (inputVideo.grab())
+	{
+		Mat image, imageToShow;
+		inputVideo.retrieve(image);
+
+		image.copyTo(imageToShow); //necessary so the stuff from 'putText(..)' won't be saved
+		putText(imageToShow, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
+			Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
+		namedWindow("Capture Camera Calibration Images", WINDOW_NORMAL | CV_GUI_EXPANDED);
+		imshow("Capture Camera Calibration Images", imageToShow);
+
+		char key = (char)waitKey(10);
+
+		if (key == 27) break;
+
+		if (key == 'c')
+		{
+			cout << "Frame captured" << endl;
+			frameCnt++;
+			std::string path = "./images/calibImage_";
+			path.append(std::to_string(frameCnt));
+			path.append(".png");
+			imwrite(path, image);
+		}
+	}
+	return error;
+}
+
 int calibrateCamera()
 {
 	static int frameCnt = 0;
