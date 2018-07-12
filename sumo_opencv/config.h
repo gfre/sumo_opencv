@@ -76,17 +76,22 @@
 #define CHARUCO_MARKER_LENGTH_M				(0.094) //(0.09405)				//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1667)					//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)					//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/calibration_basler_zero_tangent_zero_k3.xml"  //Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB				"camera_parameters/test.xml"  //Name of output file of generated calibration parameters
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)					//Show detected Charuco Corners on Image
 
 	/* ERROR CODES */
-#define ERR_OK								(0u)	
-#define ERR_INV_PARAM_FILE					(1u)
-#define ERR_NO_ORIGIN						(2u)
-#define ERR_SERIAL_CONFIG					(3u)
-#define ERR_FILE_NOT_OPEN					(4u)
+#define ERR_OK								(0x00u)	
+#define ERR_INV_PARAM_FILE					(0x01u)
+#define ERR_NO_ORIGIN						(0x02u)
+#define ERR_SERIAL_CONFIG					(0x03u)
+#define ERR_FILE_NOT_OPEN					(0x04u)
+#define ERR_OPEN_CAMERA						(0x05u)
+#define ERR_SET_CAMERA_RESOLUTION			(0x06u)
+#define ERR_GRAB_INPUT_VIDEO				(0x07u)
+#define ERR_RETRIEVE_IMAGE					(0x08u)
+#define ERR_USER_ESCAPE						(0x09u)
 
 #define CHARUCO_ERR_NOT_ENOUGH_FRAMES		(5u)
 #define CHARUCO_ERR_NOT_ENOUGH_CORNERS		(6u)
