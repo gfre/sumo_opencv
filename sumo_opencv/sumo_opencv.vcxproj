@@ -157,7 +157,6 @@
     <ClCompile Include="fileOutput.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="serial.cpp" />
-    <ClCompile Include="stitcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arucoFunc.h" />
@@ -165,7 +164,6 @@
     <ClInclude Include="detect.h" />
     <ClInclude Include="fileOutput.h" />
     <ClInclude Include="serial.h" />
-    <ClInclude Include="stitcher.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

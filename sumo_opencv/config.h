@@ -1,15 +1,15 @@
 #pragma once 
 #include <Windows.h>
 
-/* SERIAL SETUP*/
+	/* SERIAL SETUP*/
 #define SERIAL_COM_PORT						"COM4"					//Select COM port for serial transmission (with KF64 board which appears as "USB Serial Device" in Ports (COM&LPT))
 
-/* ENABLE FEATURES */
+	/* ENABLE FEATURES */
 #define GENERATE_ARUCO_CODES				(0x01u)					//Generate and save Aruco Marker
 #define CALIBRATE_CAMERA					(0x02u)					//Calibrate Camera
 #define DETECT_MARKERS						(0x04u)					//Detect Markers
 
-/* SELECT PROGRAM MODE */
+	/* SELECT PROGRAM MODE */
 #define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
@@ -34,7 +34,7 @@
 #define SERIAL_TRANSMIT						(TRUE)					//Enable/Disable Serial Transmission
 #define PRINT_SERIAL_MSG_TO_CL				(TRUE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
 
-/* SAVE COORDINATES TO CSV */
+	/* SAVE COORDINATES TO CSV */
 #define CSV_SAVE_ID							(TRUE)					//Set to true if id should be saved as well
 #define CSV_USE_COMMA						(TRUE)					//Use a comma as decimal separator 
 #define CSV_SEPARATOR						";"
@@ -43,13 +43,13 @@
 #define CSV_NO_ID							(-1)
 #define CSV_SAVE_TIME						(TRUE)					//Save timestamp for each measurement
 
-/* CAMERA SETUP */
+	/* CAMERA SETUP */
 #define FRAME_WIDTH							(2592)					//Camera image width
 #define FRAME_HEIGHT						(2048)					//Camera image height
 #define MS_BETWEEN_FRAMES					(1)						// 0 will freeze the program until key is pressed. The larger this value, the slower the data transmission 
 #define REC_FPS								(2.5)
 
-/* ARUCO SETUP */
+	/* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary
 #define MARKER_LENGTH						(100)										//Marker length in mm (98 - 150)
 #define MAX_NUMBER_OF_MARKERS				(11)										//How many markers/robots exist
@@ -57,13 +57,13 @@
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
 #define CALIB_FILE_NAME						"camera_parameters/calibration_basler_zero_tangent_zero_k3.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
 
-/* Corner Refinement */
+	/* Corner Refinement */
 #define CR_ENABLE							(true)
 #define CR_WIN_SIZE							(3)
 #define CR_MAX_ITERATIONS					(50)
 #define CR_MIN_ACCURACY						(0.1)
 
-/* ChAruco Camera Calibration */
+	/* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)					//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
 #define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_FIX_ASPECT_RATIO | CV_CALIB_FIX_TANGENT_DIST | CV_CALIB_FIX_K3 )		//(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_THIN_PRISM_MODEL | CV_CALIB_TILTED_MODEL)
 #define CHARUCO_CAM_ID						(0)						//Select which camera to calibrate
@@ -80,7 +80,7 @@
 #define CHARUCO_PRINT_FINAL					(TRUE)
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)					//Show detected Charuco Corners on Image
 
-/* ERROR CODES */
+	/* ERROR CODES */
 #define ERR_OK								(0u)	
 #define ERR_INV_PARAM_FILE					(1u)
 #define ERR_NO_ORIGIN						(2u)

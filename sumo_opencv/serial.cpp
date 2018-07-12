@@ -110,12 +110,6 @@ int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byte
 		//cout << "Message: \"" << sendBuf << "\" successfully transmitted" << endl;
 	}
 
-#if SERIAL_READ_DATA
-	int16_t szBuf[] = { 0 };
-	DWORD dwBytesRead = 0;
-	ReadFile(hComm, szBuf, sizeof(szBuf) - 1, &dwBytesRead, NULL);
-#endif
-
 
 	CloseHandle(hComm);
 	return errorCode;

@@ -6,7 +6,6 @@
 #include "detect.h"
 #include "fileOutput.h"
 #include "serial.h"
-#include "stitcher.h"
 
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
