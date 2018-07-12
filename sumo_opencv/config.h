@@ -65,21 +65,22 @@
 #define CR_MIN_ACCURACY						(0.1)
 
 	/* ChAruco Camera Calibration */
-#define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)					//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
+#define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)							//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
 #define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_FIX_ASPECT_RATIO | CV_CALIB_FIX_TANGENT_DIST | CV_CALIB_FIX_K3 )		//(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_THIN_PRISM_MODEL | CV_CALIB_TILTED_MODEL)
-#define CHARUCO_CAM_ID						(0)						//Select which camera to calibrate
+#define CHARUCO_CAM_ID						(0)								//Select which camera to calibrate
 #define CHARUCO_NUM_SQUARES_X				(4)
 #define CHARUCO_NUM_SQUARES_Y				(6)
-#define CHARUCO_SQUARE_LENGTH				(397)					//Charuco Board square length in pixel
-#define CHARUCO_MARKER_LENGTH				(283)					//Charuco Board marker length in pixel
+#define CHARUCO_SQUARE_LENGTH				(397)							//Charuco Board square length in pixel
+#define CHARUCO_MARKER_LENGTH				(283)							//Charuco Board marker length in pixel
 #define CHARUCO_SQUARE_LENGTH_M				(0.123) //(0.12165)				//Charuco Board square length in meter
 #define CHARUCO_MARKER_LENGTH_M				(0.094) //(0.09405)				//Charuco Board marker length in meter
-#define CHARUCO_FOCAL_LENGTH_EST			(1667)					//Intrinsic guess of focal length
-#define CHARUCO_REFIND_STRATEGY				(FALSE)					//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB				"camera_parameters/test.xml"  //Name of output file of generated calibration parameters
+#define CHARUCO_FOCAL_LENGTH_EST			(1667)							//Intrinsic guess of focal length
+#define CHARUCO_REFIND_STRATEGY				(FALSE)							//Use refind strategy to find markers based on previously found markers
+#define CHARUCO_FILENAME_CALIB_CAMERA		"camera_parameters/test.xml"	//Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB_IMAGES		"images/calibImage_"			//This gets is the base file name which will be concatenated with an index for each image
 #define CHARUCO_ASPECT_RATIO				(1)
-#define CHARUCO_PRINT_FINAL					(TRUE)
-#define CHARUCO_SHOW_CHESSBOARD_CORNERS		(TRUE)					//Show detected Charuco Corners on Image
+#define CHARUCO_PRINT_FINAL					(TRUE)							//Print calibration errors and loaded images
+#define CHARUCO_SHOW_CHESSBOARD_CORNERS		(FALSE)							//Show detected Charuco Corners on Image
 
 	/* ERROR CODES */
 #define ERR_OK								(0x00u)	
@@ -87,11 +88,13 @@
 #define ERR_NO_ORIGIN						(0x02u)
 #define ERR_SERIAL_CONFIG					(0x03u)
 #define ERR_FILE_NOT_OPEN					(0x04u)
-#define ERR_OPEN_CAMERA						(0x05u)
-#define ERR_SET_CAMERA_RESOLUTION			(0x06u)
-#define ERR_GRAB_INPUT_VIDEO				(0x07u)
-#define ERR_RETRIEVE_IMAGE					(0x08u)
+#define ERR_CAMERA_OPEN						(0x05u)
+#define ERR_CAMERA_SET_RESOLUTION			(0x06u)
+#define ERR_INPUTVIDEO_GRAB					(0x07u)
+#define ERR_INPUTVIDEO_RETRIEVE				(0x08u)
 #define ERR_USER_ESCAPE						(0x09u)
+#define ERR_IMAGE_WRITE						(0x10u)
+#define ERR_IMAGE_READ						(0x11u)
 
 #define CHARUCO_ERR_NOT_ENOUGH_FRAMES		(5u)
 #define CHARUCO_ERR_NOT_ENOUGH_CORNERS		(6u)

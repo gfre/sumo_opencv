@@ -28,7 +28,7 @@ int drawArucoMarker(int id, int size, int borderBits, string ofileName) {
 	//imshow("Aruco Marker", markerImage);
 	imwrite(ofileName, markerImage);
 	//waitKey(0);
-	cout << ofileName << " Marker succesfully created" << endl;
+	std::cout << ofileName << " Marker succesfully created" << std::endl;
 
 	return returnCode;
 }
@@ -135,26 +135,26 @@ static bool saveCameraParams(const string &filename, Size imageSize, float aspec
 
 int captureSaveCalibImages()
 {
-	int error = ERR_OPEN_CAMERA;
+	int error = ERR_CAMERA_OPEN;
 	static int frameCnt = 0;
 
 	VideoCapture inputVideo;
 	if (TRUE == inputVideo.open(CHARUCO_CAM_ID))
 	{
-		error = ERR_SET_CAMERA_RESOLUTION;
+		error = ERR_CAMERA_SET_RESOLUTION;
 		if ( (TRUE == inputVideo.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)) && (TRUE == inputVideo.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)) )
 		{
-			error = ERR_GRAB_INPUT_VIDEO;
-			while (TRUE == inputVideo.grab())
+			error = ERR_INPUTVIDEO_GRAB;
+			while ( TRUE == inputVideo.grab())
 			{
 				Mat image, imageToShow;
-				error = ERR_RETRIEVE_IMAGE;
+				error = ERR_INPUTVIDEO_RETRIEVE;
 				if (TRUE == inputVideo.retrieve(image))
 				{
 					error = ERR_OK;
 					image.copyTo(imageToShow); //necessary so the stuff from 'putText(..)' won't be saved
 					putText(imageToShow, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
-						Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
+						Point(10, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2);
 					namedWindow("Capture Camera Calibration Images", WINDOW_NORMAL | CV_GUI_EXPANDED);
 					imshow("Capture Camera Calibration Images", imageToShow);
 
@@ -167,12 +167,16 @@ int captureSaveCalibImages()
 					}
 					else if (key == 'c')
 					{
-						cout << "Frame captured" << endl;
+						std::cout << "Frame captured" << std::endl;
 						frameCnt++;
-						std::string path = "./images/calibImage_";
+						std::string path = CHARUCO_FILENAME_CALIB_IMAGES;
 						path.append(std::to_string(frameCnt));
 						path.append(".png");
-						imwrite(path, image);
+						if (FALSE == imwrite(path, image))
+						{
+							error = ERR_IMAGE_WRITE;
+							break;
+						}
 					}
 				}
 			}
@@ -184,7 +188,8 @@ int captureSaveCalibImages()
 
 int calibrateCamera()
 {
-	int errorCode = ERR_OK;
+	int error = ERR_OK;
+	static int imageCnt = 1;
 	float aspectRatio = CHARUCO_ASPECT_RATIO;
 	int calibrationFlags = CHARUCO_FLAGS;
 
@@ -194,14 +199,6 @@ int calibrateCamera()
 	detectorParams->cornerRefinementWinSize = 5;
 	detectorParams->cornerRefinementMaxIterations = 50;
 	detectorParams->cornerRefinementMinAccuracy = 0.01;
-
-
-	VideoCapture inputVideo1;
-	inputVideo1.open(CHARUCO_CAM_ID);
-
-	//Set Resolution
-	inputVideo1.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	inputVideo1.set(CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 
 
 
@@ -226,12 +223,15 @@ int calibrateCamera()
 	cameraMatrix.at< double >(1, 2) = FRAME_HEIGHT / 2;
 	cameraMatrix.at< double >(2, 2) = 1;
 
+	std::string path = CHARUCO_FILENAME_CALIB_IMAGES;
+	path.append(std::to_string(imageCnt)); //first images' name
+	path.append(".png");
+	Mat image;
+	image = imread(path);
 
-	while (inputVideo1.grab())
+	//read in all images
+	while (NULL != image.data) //check if there is an image available
 	{
-		Mat image, imageCopy;
-		inputVideo1.retrieve(image);
-
 		vector< int > ids;
 		vector< vector< Point2f > > corners, rejected;
 
@@ -248,30 +248,30 @@ int calibrateCamera()
 			aruco::interpolateCornersCharuco(corners, ids, image, charucoboard, currentCharucoCorners, currentCharucoIds);
 
 		// draw results
-		image.copyTo(imageCopy);
 		if (ids.size() > 0)
-			aruco::drawDetectedMarkers(imageCopy, corners);
+			aruco::drawDetectedMarkers(image, corners);
 
 		if (currentCharucoCorners.total() > 0)
-			aruco::drawDetectedCornersCharuco(imageCopy, currentCharucoCorners, currentCharucoIds);
+			aruco::drawDetectedCornersCharuco(image, currentCharucoCorners, currentCharucoIds);
 
-		putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
-			Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
 
-		namedWindow("Camera Calibration", WINDOW_NORMAL | CV_GUI_EXPANDED);
-		imshow("Camera Calibration", imageCopy);
-		char key = (char)waitKey(10);
+		//namedWindow("Camera Calibration", WINDOW_NORMAL | CV_GUI_EXPANDED);
+		//imshow("Camera Calibration", image);
 
-		if (key == 27) break;
+		//char key = (char)waitKey(0); //process next image when any key is pressed
 
-		if (key == 'c' && ids.size() > 0)
-		{
-			cout << "Frame captured" << endl;
-			allCorners.push_back(corners);
-			allIds.push_back(ids);
-			allImgs.push_back(image);
-			imgSize = image.size();
-		}
+		std::cout << "Image loaded from file: "<< path << std::endl;
+		allCorners.push_back(corners);
+		allIds.push_back(ids);
+		allImgs.push_back(image);
+		imgSize = image.size();
+
+		//go to next image
+		imageCnt++;
+		path = CHARUCO_FILENAME_CALIB_IMAGES; //reset path name
+		path.append(std::to_string(imageCnt)); //first images' name
+		path.append(".png");
+		image = imread(path, 1);
 	}
 
 
@@ -300,7 +300,6 @@ int calibrateCamera()
 	}
 
 	// calibrate camera using aruco markers
-
 	double arucoRepErr;
 	arucoRepErr = aruco::calibrateCameraAruco(allCornersConcatenated, allIdsConcatenated, markerCounterPerFrame, board, imgSize, cameraMatrix, distCoeffs, noArray(), noArray(), calibrationFlags);
 
@@ -333,16 +332,18 @@ int calibrateCamera()
 	// calibrate camera using charuco
 	repError = aruco::calibrateCameraCharuco(allCharucoCorners, allCharucoIds, charucoboard, imgSize, cameraMatrix, distCoeffs, rvecs, tvecs, calibrationFlags);
 
-	bool saveOk = saveCameraParams(CHARUCO_FILENAME_CALIB, imgSize, aspectRatio, calibrationFlags, cameraMatrix, distCoeffs, repError);
+	bool saveOk = saveCameraParams(CHARUCO_FILENAME_CALIB_CAMERA, imgSize, aspectRatio, calibrationFlags, cameraMatrix, distCoeffs, repError);
 	if (!saveOk) {
 		cerr << "Cannot save output file" << endl;
 		return CHARUCO_ERR_CALIB_FILE;
 	}
 
 #if CHARUCO_PRINT_FINAL
-	cout << "Rep Error: " << repError << endl;
-	cout << "Rep Error Aruco: " << arucoRepErr << endl;
-	cout << "Calibration saved to " << CHARUCO_FILENAME_CALIB << endl;
+	std::cout << "Rep Error: " << repError << std::endl;
+	std::cout << "Rep Error Aruco: " << arucoRepErr << std::endl;
+	std::cout << "Calibration saved to " << CHARUCO_FILENAME_CALIB_CAMERA << std::endl;
+	std::cout << "Press ENTER to continue... " << flush;
+	std::cin.get();
 #endif
 
 	// show interpolated charuco corners for debugging
@@ -362,5 +363,5 @@ int calibrateCamera()
 		}
 	}
 
-	return errorCode;
+	return error;
 }
