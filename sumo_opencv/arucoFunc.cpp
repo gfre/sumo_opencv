@@ -171,7 +171,7 @@ int captureSaveCalibImages()
 						frameCnt++;
 						std::string path = CHARUCO_FILENAME_CALIB_IMAGES;
 						path.append(std::to_string(frameCnt));
-						path.append(".png");
+						path.append(CHARUCO_FILENAME_CALIB_IMAGES_SUFFIX);
 						if (FALSE == imwrite(path, image))
 						{
 							error = ERR_IMAGE_WRITE;
@@ -225,7 +225,7 @@ int calibrateCamera()
 
 	std::string path = CHARUCO_FILENAME_CALIB_IMAGES;
 	path.append(std::to_string(imageCnt)); //first images' name
-	path.append(".png");
+	path.append(CHARUCO_FILENAME_CALIB_IMAGES_SUFFIX);
 	Mat image;
 	image = imread(path);
 
@@ -270,7 +270,7 @@ int calibrateCamera()
 		imageCnt++;
 		path = CHARUCO_FILENAME_CALIB_IMAGES; //reset path name
 		path.append(std::to_string(imageCnt)); //first images' name
-		path.append(".png");
+		path.append(CHARUCO_FILENAME_CALIB_IMAGES_SUFFIX);
 		image = imread(path, 1);
 	}
 

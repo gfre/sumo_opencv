@@ -11,7 +11,7 @@
 #define DETECT_MARKERS						(0x04u)					//Detect markers
 
 	/* SELECT PROGRAM MODE */
-#define SUMO_OPENCV_MODE                    (CALIBRATION_CAPTURE_SAVE_IMAGES)
+#define SUMO_OPENCV_MODE                    (CALIBRATION_CALIBRATE_CAMERA)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
 #define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
@@ -56,7 +56,7 @@
 #define MAX_NUMBER_OF_MARKERS				(11)										//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
-#define CALIB_FILE_NAME						"camera_parameters/calibration_basler_zero_tangent_zero_k3.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
+#define CALIB_FILE_NAME						"camera_parameters/moin.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
 
 	/* Corner Refinement */
 #define CR_ENABLE							(true)
@@ -66,7 +66,23 @@
 
 	/* ChAruco Camera Calibration */
 #define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)							//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
-#define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_FIX_ASPECT_RATIO | CV_CALIB_FIX_TANGENT_DIST | CV_CALIB_FIX_K3 )		//(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_RATIONAL_MODEL | CV_CALIB_THIN_PRISM_MODEL | CV_CALIB_TILTED_MODEL)
+/* 
+distCoeffs looks as follows:  [k1 k2 p1 p2 [k3 [k4 k5 k6 [s1 s2 s3 s4 [taux tauy]]]]
+k's denote radial distortion parameters,
+p's denote tangential distortion parameters,
+s's denote thin prism distortion parameters,
+tau's denote tilted sensor parameters 
+
+CV_CALIB_RATIONAL_MODEL	   enables parameters k4-k6
+CV_CALIB_THIN_PRISM_MODEL  enables parameters s1-s4
+CV_CALIB_TILTED_MODEL      enables parameters taux, tauy
+
+CV_CALIB_FIX_TANGENT_DIST  sets p1 and p2 to zero 
+CV_CALIB_FIX_K3            sets k3 to zero 
+CV_CALIB_FIX_S1_S2_S3_S4   sets s1-s4 to zero
+CV_CALIB_FIX_TAUX_TAUY	   sets taux and tauy to zero
+*/
+#define CHARUCO_FLAGS						(CV_CALIB_USE_INTRINSIC_GUESS | CV_CALIB_FIX_PRINCIPAL_POINT | CV_CALIB_FIX_ASPECT_RATIO |CV_CALIB_RATIONAL_MODEL )		
 #define CHARUCO_CAM_ID						(0)								//Select which camera to calibrate
 #define CHARUCO_NUM_SQUARES_X				(4)
 #define CHARUCO_NUM_SQUARES_Y				(6)
@@ -76,8 +92,9 @@
 #define CHARUCO_MARKER_LENGTH_M				(0.094) //(0.09405)				//Charuco Board marker length in meter
 #define CHARUCO_FOCAL_LENGTH_EST			(1667)							//Intrinsic guess of focal length
 #define CHARUCO_REFIND_STRATEGY				(FALSE)							//Use refind strategy to find markers based on previously found markers
-#define CHARUCO_FILENAME_CALIB_CAMERA		"camera_parameters/test.xml"	//Name of output file of generated calibration parameters
-#define CHARUCO_FILENAME_CALIB_IMAGES		"images/calibImage_"			//This gets is the base file name which will be concatenated with an index for each image
+#define CHARUCO_FILENAME_CALIB_CAMERA		"camera_parameters/8_k1k2p1p2k3k4k5k6_enabled.xml"	//Name of output file of generated calibration parameters
+#define CHARUCO_FILENAME_CALIB_IMAGES		"images/calibImage_"			//This is the path and file base name which will be concatenated with an index for each image
+#define CHARUCO_FILENAME_CALIB_IMAGES_SUFFIX ".png"							//This is the suffix for the taken images
 #define CHARUCO_ASPECT_RATIO				(1)
 #define CHARUCO_PRINT_FINAL					(TRUE)							//Print calibration errors and loaded images
 #define CHARUCO_SHOW_CHESSBOARD_CORNERS		(FALSE)							//Show detected Charuco Corners on Image
