@@ -18,7 +18,7 @@
 #define CROPPED_IMAGE_SAFETY_ZONE			(50)					//This value will be added to the cropped image [px]
 #define MOVING_AVG_SAMPLES					(1)						//Number of measurements used in moving average before data is send to COM port
 
-#define SHOW_ORIGINAL_IMAGE					(FALSE)					//Show the originally captured image with detected Markers and Coordinate System. May slow down the program 
+#define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected Markers and Coordinate System. May slow down the program 
 #define SHOW_UNDISTORTED_IMAGE				(FALSE)					//Show the undistorted image 
 #define SHOW_CROPPED_IMAGE					(TRUE)					//Show the cropped image
 #define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
@@ -55,7 +55,7 @@
 #define MARKER_LENGTH						(100)										//Marker length in mm (98 - 150)
 #define MAX_NUMBER_OF_MARKERS				(11)										//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3)											//How many variables per robot (x, y, phi)
-#define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES))
+#define MAX_MSG_LENGTH ((MAX_NUMBER_OF_MARKERS+1 )*(NUM_OF_VARIABLES))
 #define CALIB_FILE_NAME						"camera_parameters/1_k1k2_fix_fl_enabled.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
 
 	/* Corner Refinement */
