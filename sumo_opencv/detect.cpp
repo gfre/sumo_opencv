@@ -420,7 +420,7 @@ int detectMarkers()
 
 
 
-		#if SHOW_ORIGINAL_IMAGE
+#if SHOW_ORIGINAL_IMAGE
 			// Show Config Messages on the Screen
 			putText(image, "Press 'r' to invoke software reset",			Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 			putText(image, "Press 'i' to reset to IDLE application state",	Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
@@ -440,14 +440,22 @@ int detectMarkers()
 			#endif
 			//Set Window
 			namedWindow("Original Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
+			//Draw image
+			imshow("Original Image", image);
+#endif
+		
+#if SHOW_CROPPED_IMAGE
 			namedWindow("Cropped Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
+			imshow("Cropped Image", pCroppedImage);
+
+#endif 
+
+			
+#if SHOW_UNDISTORTED_IMAGE
 			namedWindow("Undistorted Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			undistort(image, undistortedImage, camMatrix, distCoeffs);
-			//Draw image
 			imshow("Undistorted Image", undistortedImage);
-			imshow("Original Image", image);
-			imshow("Cropped Image", pCroppedImage);
-		#endif
+#endif	
 	toc();
 	}
 	inputVideo.release();
