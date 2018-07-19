@@ -18,7 +18,7 @@
 #define CROPPED_IMAGE_SAFETY_ZONE			(50)					//This value will be added to the cropped image [px]
 #define MOVING_AVG_SAMPLES					(1)						//Number of measurements used in moving average before data is send to COM port
 
-#define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected Markers and Coordinate System. May slow down the program 
+#define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected markers and coordinate system.
 #define SHOW_UNDISTORTED_IMAGE				(FALSE)					//Show the undistorted image 
 #define SHOW_CROPPED_IMAGE					(TRUE)					//Show the cropped image
 #define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image

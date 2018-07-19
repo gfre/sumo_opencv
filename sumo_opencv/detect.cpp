@@ -116,17 +116,23 @@ int detectMarkers()
 	//param->cornerRefinementMinAccuracy	= CR_MIN_ACCURACY;
 
 	int maxNumOfSumos = 0;
-	//This loop makes sure that maxNumSumos is the appropriate value
-	for (int sftyCnt = 0; sftyCnt <= NUM_FIRST_DETECTION_COUNTS; sftyCnt++)
+	//Ensures that at least one sumo is detected before entering main loop
+	while (0 == maxNumOfSumos)
 	{
-		if (inputVideo.read(image))
+		//This loop makes sure that maxNumSumos is the appropriate value
+		for (int sftyCnt = 0; sftyCnt <= NUM_FIRST_DETECTION_COUNTS; sftyCnt++)
 		{
-			aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
-			if (markerIds.size() > 0)
+			if (inputVideo.read(image))
 			{
-				maxNumOfSumos = max(maxNumOfSumos, markerIds.size());
+				aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
+				if (markerIds.size() > 0)
+				{
+					maxNumOfSumos = max(maxNumOfSumos, markerIds.size());
+				}
 			}
 		}
+		if (0 == maxNumOfSumos)
+			std::cout << "No sumos detected, place some sumos on the floor!" << std::endl;
 	}
 	//make sure that the first cropped image contains all possible sumos
 	while (inputVideo.read(image))
