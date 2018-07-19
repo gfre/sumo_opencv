@@ -132,7 +132,9 @@ int detectMarkers()
 			}
 		}
 		if (0 == maxNumOfSumos)
-			std::cout << "No sumos detected, place some sumos on the floor!" << std::endl;
+			std::cout << "No markers detected, place some \n markers in front of the camera!" << std::endl;
+		else
+			std::cout << "Number of markers detected:" << maxNumOfSumos << std::endl;
 	}
 	//make sure that the first cropped image contains all possible sumos
 	while (inputVideo.read(image))
@@ -162,7 +164,6 @@ int detectMarkers()
 			break;
 		}
 	}
-	std::cout << "max detected num of sumos: " <<maxNumOfSumos << std::endl;
 		
 
 	//Grab frames continuously
@@ -223,7 +224,7 @@ int detectMarkers()
 
 				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 			}
-			// if not all sumos were detected, make take last image where all sumos were detected
+			// if not all sumos were detected, expand image in each frame
 			else if (markerIds.size() < maxNumOfSumos)
 			{
 				//Update absolute position with relative values
@@ -242,16 +243,17 @@ int detectMarkers()
 
 				newOrig_x = MAX(newOrig_x - EXPAND_WINDOW, 0);
 				newOrig_y = MAX(newOrig_y - EXPAND_WINDOW, 0);
-				newEnd_x = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
-				newEnd_y = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
-				newWidth = newEnd_x - newOrig_x;
+				newEnd_x  = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
+				newEnd_y  = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
+				newWidth  = newEnd_x - newOrig_x;
 				newHeight = newEnd_y - newOrig_y;
 				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 			}
+			// if a new marker was added, update maxNumOfSumos
 			else
 			{
-				maxNumOfSumos = MIN(markerIds.size(),11);
-				std::cout << "max detected num of sumos: " << maxNumOfSumos << std::endl;
+				maxNumOfSumos = MIN(markerIds.size(), MAX_NUMBER_OF_MARKERS);
+				std::cout << "Maximum number of detectable markers: " << maxNumOfSumos << std::endl;
 			}
 
 			for (size_t i = 0; i < markerIds.size(); i++)

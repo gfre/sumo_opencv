@@ -24,7 +24,7 @@
 #define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
-#define MANUAL_REC							(FALSE)					//Enable manual video recordings
+#define MANUAL_REC							(TRUE)					//Enable manual video recordings
 #define AUTO_REC							(FALSE)					//Automatically start video capture with transition
 
 #define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
@@ -65,7 +65,7 @@
 #define CR_MIN_ACCURACY						(0.1)
 
 	/* ChAruco Camera Calibration */
-#define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)							//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
+#define CHARUCO_USE_INTRINSIC_GUESS			(TRUE)	//Has to be true if CHARUCO_FLAGS contains CV_CALIB_USE_INTRINSIC_GUESS
 /* 
 distCoeffs looks as follows:  [k1 k2 p1 p2 [k3 [k4 k5 k6 [s1 s2 s3 s4 [taux tauy]]]]
 k's denote radial distortion parameters,
