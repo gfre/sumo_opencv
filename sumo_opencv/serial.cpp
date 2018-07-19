@@ -117,7 +117,7 @@ int sendSerial(char *serialPort, int maxBufSize, uint16_t *sendBuf, uint8_t byte
 
 }
 
-int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int, double> &phi)
+int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int, double> &phi, const int movingAverageSamples)
 {
 	int errorCode = ERR_OK;
 
@@ -140,18 +140,18 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 			markerMvgAvg[mvgAvgIndex[i]][i] = marker[i];
 			phiMvgAvg[mvgAvgIndex[i]][i] = phi[i];
 			
-			mvgAvgIndex[i] = (mvgAvgIndex[i] + 1) % MOVING_AVG_SAMPLES;
+			mvgAvgIndex[i] = (mvgAvgIndex[i] + 1) % movingAverageSamples;
 			mvgAvgIter[i]++;
 
 			//Marker with ID = i was detected
 
-			if (MOVING_AVG_SAMPLES <= mvgAvgIter[i])
+			if (movingAverageSamples <= mvgAvgIter[i])
 			{
 				double xAvg		= 0.0;
 				double yAvg		= 0.0;
 				double phiAvg	= 0.0;
 
-				for (int j = 0; j < MOVING_AVG_SAMPLES; j++)
+				for (int j = 0; j < movingAverageSamples; j++)
 				{
 					double x = markerMvgAvg[j][i].at<double>(0, 0);
 					double y = markerMvgAvg[j][i].at<double>(1, 0);
@@ -161,9 +161,9 @@ int composeSerialMessage(uint16_t *message_, map<int, cv::Mat> &marker, map<int,
 					phiAvg += phiMvgAvg[j][i];
 				}
 
-				xAvg	= xAvg / (double)MOVING_AVG_SAMPLES;
-				yAvg	= yAvg / (double)MOVING_AVG_SAMPLES;
-				phiAvg	= phiAvg / (double)MOVING_AVG_SAMPLES * 180.0 / M_PI;
+				xAvg	= xAvg / (double)movingAverageSamples;
+				yAvg	= yAvg / (double)movingAverageSamples;
+				phiAvg	= phiAvg / (double)movingAverageSamples * 180.0 / M_PI;
 				
 				double phiTemp = -phi[i] + (M_PI);
 				if (phiTemp > M_PI) phiTemp = -M_PI + (phiTemp - M_PI);

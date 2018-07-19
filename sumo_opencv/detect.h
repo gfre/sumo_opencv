@@ -15,4 +15,8 @@ typedef enum recState_e
 	, REC
 } recState_t;
 
-int detectMarkers(char *serialComPort, const int firstDetectionFrames);
+int detectMarkers(char *serialComPort_, const int movingAverageSamples_, const int transmitSerialData_, 
+					const int firstDetectionFrames_, const int windowExpansionSpeed_, const int showOriginalImage_, const int showUndistortedImage_,
+					const int showCroppedImage_, const int showPrincipalPoint_, const int showCoordinateSystemInImage_, const int safetyZone_,
+					const int printWorldCoordinates_, const int printToCsvFile_, const int printIntrinsicParameters_, const int printRotationMatrix_,
+					const int printSerialMessage_);

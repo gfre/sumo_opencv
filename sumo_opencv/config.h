@@ -1,26 +1,9 @@
 #pragma once 
 #include <Windows.h>
-#define CROPPED_IMAGE_SAFETY_ZONE 50
-#define EXPAND_WINDOW 5
-#define MOVING_AVG_SAMPLES 1
-#define CROPPED_IMAGE_SAFETY_ZONE 50
 
-
-#define SHOW_UNDISTORTED_IMAGE				(FALSE)					//Show the undistorted image 
-#define SHOW_CROPPED_IMAGE					(TRUE)					//Show the cropped image
-#define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
-#define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define MANUAL_REC							(TRUE)					//Enable manual video recordings
 #define AUTO_REC							(FALSE)					//Automatically start video capture with transition
-
-#define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
-#define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File
-#define PRINT_INTR_PARA						(FALSE)					//Print intrinsic camera parameters (Camera matrix and distortion coefficients)
-#define PRINT_ROT_MATRIX					(FALSE)					//Print rotation matrix for each detected marker
-
-#define SERIAL_TRANSMIT						(TRUE)					//Enable/Disable Serial Transmission
-#define PRINT_SERIAL_MSG_TO_CL				(FALSE)					//Print the Serial Message to Command Line. This is what is being sent to the robots
 
 	/* SAVE COORDINATES TO CSV */
 #define CSV_SAVE_ID							(TRUE)					//Set to true if id should be saved as well

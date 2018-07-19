@@ -39,7 +39,11 @@ void toc()
 
 
 
-int detectMarkers(char* serialComPort, const int firstDetectionFrames)
+int detectMarkers(char *serialComPort_, const int movingAverageSamples_, const int transmitSerialData_,
+	const int firstDetectionFrames_, const int windowExpansionSpeed_, const int showOriginalImage_, const int showUndistortedImage_,
+	const int showCroppedImage_, const int showPrincipalPoint_, const int showCoordinateSystemInImage_, const int safetyZone_,
+	const int printWorldCoordinates_, const int printToCsvFile_, const int printIntrinsicParameters_, const int printRotationMatrix_,
+	const int printSerialMessage_)
 {
 	int returnCode = ERR_OK;
 	string configFile = CALIB_FILE_NAME;
@@ -121,7 +125,7 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 	while (0 == maxNumOfSumos)
 	{
 		//This loop makes sure that maxNumSumos is the appropriate value
-		for (int sftyCnt = 0; sftyCnt <= firstDetectionFrames; sftyCnt++)
+		for (int sftyCnt = 0; sftyCnt <= firstDetectionFrames_; sftyCnt++)
 		{
 			if (inputVideo.read(image))
 			{
@@ -154,10 +158,10 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 					max_y = MAX(max_y, origMarkerCorners[k][l].y);
 				}
 			}
-			newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
-			newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
-			newEnd_x = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
-			newEnd_y = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
+			newOrig_x = MAX(min_x - safetyZone_, 0);
+			newOrig_y = MAX(min_y - safetyZone_, 0);
+			newEnd_x = MIN(max_x + safetyZone_, FRAME_WIDTH);
+			newEnd_y = MIN(max_y + safetyZone_, FRAME_HEIGHT);
 			newWidth = newEnd_x - newOrig_x;
 			newHeight = newEnd_y - newOrig_y;
 
@@ -171,12 +175,12 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 	while (inputVideo.read(image))
 	{
 		tic();
-		#if (MANUAL_REC || AUTO_REC)
-			if (recState == REC)
-			{
-				vidWriter.write(image);
-			}
-		#endif
+#if (MANUAL_REC || AUTO_REC)
+		if (recState == REC)
+		{
+			vidWriter.write(image);
+		}
+#endif
 		// Detect Marker corners in cropped image
 		aruco::detectMarkers(pCroppedImage, dictionary, markerCorners, markerIds, param);
 
@@ -216,10 +220,10 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 						max_y = MAX(max_y, origMarkerCorners[k][l].y);
 					}
 				}
-				newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
-				newOrig_y = MAX(min_y - CROPPED_IMAGE_SAFETY_ZONE, 0);
-				newEnd_x = MIN(max_x + CROPPED_IMAGE_SAFETY_ZONE, FRAME_WIDTH);
-				newEnd_y = MIN(max_y + CROPPED_IMAGE_SAFETY_ZONE, FRAME_HEIGHT);
+				newOrig_x = MAX(min_x - safetyZone_, 0);
+				newOrig_y = MAX(min_y - safetyZone_, 0);
+				newEnd_x = MIN(max_x + safetyZone_, FRAME_WIDTH);
+				newEnd_y = MIN(max_y + safetyZone_, FRAME_HEIGHT);
 				newWidth = newEnd_x - newOrig_x;
 				newHeight = newEnd_y - newOrig_y;
 
@@ -242,11 +246,11 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 				// Estimate poses from image
 				aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
 
-				newOrig_x = MAX(newOrig_x - EXPAND_WINDOW, 0);
-				newOrig_y = MAX(newOrig_y - EXPAND_WINDOW, 0);
-				newEnd_x  = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
-				newEnd_y  = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
-				newWidth  = newEnd_x - newOrig_x;
+				newOrig_x = MAX(newOrig_x - windowExpansionSpeed_, 0);
+				newOrig_y = MAX(newOrig_y - windowExpansionSpeed_, 0);
+				newEnd_x = MIN(newEnd_x + windowExpansionSpeed_, FRAME_WIDTH);
+				newEnd_y = MIN(newEnd_y + windowExpansionSpeed_, FRAME_HEIGHT);
+				newWidth = newEnd_x - newOrig_x;
 				newHeight = newEnd_y - newOrig_y;
 				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 			}
@@ -263,9 +267,9 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 
 				// Compose rotation matrix from rotation vector
 				Rodrigues(rvecs[i], rotMatrix);
-				#if PRINT_ROT_MATRIX
-					cout << "Rot Matrix: " << rotMatrix << endl;
-				#endif
+#if PRINT_ROT_MATRIX
+				cout << "Rot Matrix: " << rotMatrix << endl;
+#endif
 
 				//Draw axes of detected marker
 				cv::aruco::drawAxis(image, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
@@ -276,74 +280,74 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 				t.at<double>(1, 0) = tvecs[i][1];
 				t.at<double>(2, 0) = tvecs[i][2];
 
-				phi[markerIds[i]]    = atan2(rotMatrix.at<double>(0, 1), -rotMatrix.at<double>(0, 0));
+				phi[markerIds[i]] = atan2(rotMatrix.at<double>(0, 1), -rotMatrix.at<double>(0, 0));
 				marker[markerIds[i]] = t;
 			}
 
-			#if PRINT_WORLD_COORDS
-				for (size_t i = 0; i < (markerIds.size()); i++)
+#if PRINT_WORLD_COORDS
+			for (size_t i = 0; i < (markerIds.size()); i++)
+			{
+				std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
+				std::cout << " | Phi: " << phi[markerIds[i]] * 180 / M_PI << std::endl;
+			}
+#endif
+
+
+#if SERIAL_TRANSMIT
+			composeSerialMessage(message, marker, phi, movingAverageSamples_);
+
+
+			sendSerial(serialComPort, 255, message, sizeof(message) / sizeof(uint8_t));
+
+#endif
+
+
+
+#if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
+			for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
+			{
+				if ((VAR_INVALID != message[3 * i]) && (VAR_INVALID != message[3 * i + 1]) && (VAR_INVALID != message[3 * i]) && (VAR_INVALID != message[3 * i + 2]))
+					cout << std::dec << "ID = " << i << " || x = " << (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
+				else
+					cout << "ID = " << i << " || x = 0x" << std::hex << (int16_t)message[3 * i] << " | y = 0x" << std::hex << (int16_t)message[3 * i + 1] << " | phi = 0x" << std::hex << (int16_t)message[3 * i + 2] << endl;
+			}
+#endif
+
+#if PRINT_COORDS_TO_CSV
+			long double timestamp = 0.0;
+			if ((markerIds.size() > 1))
+			{
+#if CSV_SAVE_ID		
+				if (recState == REC)
 				{
-						std::cout << "Marker ID: " << markerIds[i] << " | X:" << marker[markerIds[i]].at<double>(0, 0) << " Y: " << marker[markerIds[i]].at<double>(1, 0) << " Z: " << marker[markerIds[i]].at<double>(2, 0);
-						std::cout << " | Phi: " << phi[markerIds[i]] * 180 / M_PI << std::endl;
+					if (startTime == 0)
+					{
+						startTime = clock();
+					}
+					elapsedTime = clock() - startTime;
+					timestamp = (long double)elapsedTime / (long double)(CLOCKS_PER_SEC * 100.0);
+					for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
+					{
+						writeMsgToCSV((int16_t *)message, MAX_MSG_LENGTH, timestamp, &outputFile);
+					}
 				}
-			#endif
-
-
-			#if SERIAL_TRANSMIT
-				composeSerialMessage(message, marker, phi);
-
-
-				sendSerial(serialComPort, 255, message, sizeof(message) / sizeof(uint8_t));
-
-			#endif
-
-
-
-			#if PRINT_SERIAL_MSG_TO_CL & SERIAL_TRANSMIT
-				for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
-				{
-					if ( ( VAR_INVALID != message[3 * i] ) && (VAR_INVALID != message[3 * i + 1]) && (VAR_INVALID != message[3 * i]) && (VAR_INVALID != message[3 * i + 2]) )
-						cout << std::dec << "ID = " << i << " || x = " <<  (int16_t)message[3 * i] << " | y = " << (int16_t)message[3 * i + 1] << " | phi = " << (int16_t)message[3 * i + 2] << endl;
-					else
-						cout << "ID = " << i << " || x = 0x" << std::hex << (int16_t)message[3 * i] << " | y = 0x" << std::hex << (int16_t)message[3 * i + 1] << " | phi = 0x" << std::hex << (int16_t)message[3 * i + 2] << endl;
-				}
-			#endif
-
-			#if PRINT_COORDS_TO_CSV
-				long double timestamp = 0.0;
-				if ((markerIds.size() > 1))
-				{
-				#if CSV_SAVE_ID		
-					if (recState == REC)
-						{
-							if (startTime == 0)
-							{
-								startTime = clock();
-							}
-							elapsedTime = clock() - startTime;
-							timestamp = (long double)elapsedTime / (long double)(CLOCKS_PER_SEC * 100.0);
-							for (size_t i = 0; i < MAX_NUMBER_OF_MARKERS; i++)
-							{
-							writeMsgToCSV((int16_t *)message, MAX_MSG_LENGTH, timestamp, &outputFile);
-							}
-						}
-				#else
-					writeCoordsToCSV(marker[0], CSV_NO_ID);
-				#endif
-				}
-			#endif
+#else
+				writeCoordsToCSV(marker[0], CSV_NO_ID);
+#endif
+			}
+#endif
 		}
 		else
 		{
 			cv::putText(image, ERR_STR_NO_MARKER, Point(500, 520), FONT_HERSHEY_SIMPLEX, 2, Scalar(0, 0, 255), 2);
 		}
-		#if (SHOW_FRAME_CENTER && SHOW_ORIGINAL_IMAGE)
-			circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
-		#endif
-		#if (SHOW_FRAME_COORD_SYS && SHOW_ORIGINAL_IMAGE)
-			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
-			cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
-		#endif
+#if (SHOW_FRAME_CENTER && SHOW_ORIGINAL_IMAGE)
+		circle(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), 5, Scalar(0, 0, 255));
+#endif
+#if (SHOW_FRAME_COORD_SYS && SHOW_ORIGINAL_IMAGE)
+		cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2 - 100., FRAME_HEIGHT / 2), Scalar(0, 0, 255), 2);
+		cv::arrowedLine(image, Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Point2f(FRAME_WIDTH / 2, FRAME_HEIGHT / 2 + 100.), Scalar(0, 255, 0), 2);
+#endif
 
 		//End program by pressing "e"
 		char c = waitKey(MS_BETWEEN_FRAMES);
@@ -357,7 +361,7 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 			uint16_t message = VAR_SWRESET;
 			currentMsg = "SW RESET";
 
-			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort_, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Go to IDLE application state by pressing 'i'
@@ -367,7 +371,7 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 			uint16_t message = VAR_IDLE;
 			currentMsg = "IDLE";
 
-			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort_, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Go to normal application state by pressing 's'
@@ -377,7 +381,7 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 			sendState = STATE_READY;
 			currentMsg = "READY";
 
-			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort_, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Start next Transition by pressing "g"
@@ -391,7 +395,7 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 				recMsg = "RECORDING...";
 			}
 			// If last state was also transition, increment transition counter, reset it otherwise
-			if ( ("IDLE" != currentMsg) && ("SW RESET" != currentMsg) && ("READY" != currentMsg) )
+			if (("IDLE" != currentMsg) && ("SW RESET" != currentMsg) && ("READY" != currentMsg))
 			{
 				trnstnCnt++;
 			}
@@ -404,67 +408,69 @@ int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 			currentMsg = "TRANSITION ";
 			currentMsg.append(s);
 
-			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort_, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << std::endl;
 		}
 
-		#if MANUAL_REC
-			//Record by pressing "w"
-			if ('W' == c || 'w' == c)
+#if MANUAL_REC
+		//Record by pressing "w"
+		if ('W' == c || 'w' == c)
+		{
+			if (recState == NO_REC)
 			{
-				if (recState == NO_REC)
-				{
-					recState = REC;
-					recMsg = "RECORDING...";
-				}
-				else
-				{
-					recState = NO_REC;
-					recMsg = "";
-					vidWriter.release();
-					outputFile.close();
-				}
+				recState = REC;
+				recMsg = "RECORDING...";
 			}
-		#endif
+			else
+			{
+				recState = NO_REC;
+				recMsg = "";
+				vidWriter.release();
+				outputFile.close();
+			}
+		}
+#endif
 
 
 
-#if SHOW_ORIGINAL_IMAGE
+		if (showOriginalImage_)
+		{
 			// Show Config Messages on the Screen
-			putText(image, "Press 'r' to invoke software reset",			Point(20, 30),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-			putText(image, "Press 'i' to reset to IDLE application state",	Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-			putText(image, "Press 's' to enter NORMAL application state",	Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-			putText(image, "Press 'g' to start next Transition",			Point(20, 150),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-			#if MANUAL_REC
-				putText(image, "Press 'w' to start recording",					Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-				putText(image, "Press 'e' to EXIT Program",						Point(20, 230),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-				putText(image, "CURRENT STATE: ",								Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-				putText(image, currentMsg,										Point(620, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-				putText(image, recMsg,											Point(400, 310), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-			#else
-				putText(image, "Press 'e' to EXIT Program",						Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-				putText(image, "CURRENT STATE: ",								Point(400, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-				putText(image, currentMsg,										Point(620, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-				putText(image, recMsg,											Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
-			#endif
+			putText(image, "Press 'r' to invoke software reset", Point(20, 30), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "Press 'i' to reset to IDLE application state", Point(20, 70), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "Press 's' to enter NORMAL application state", Point(20, 110), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "Press 'g' to start next Transition", Point(20, 150), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+#if MANUAL_REC
+			putText(image, "Press 'w' to start recording", Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "Press 'e' to EXIT Program", Point(20, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "CURRENT STATE: ", Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, currentMsg, Point(620, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+			putText(image, recMsg, Point(400, 310), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+#else
+			putText(image, "Press 'e' to EXIT Program", Point(20, 190), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, "CURRENT STATE: ", Point(400, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 140, 0), 2);
+			putText(image, currentMsg, Point(620, 230), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+			putText(image, recMsg, Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0, 0, 255), 2);
+#endif
 			//Set Window
 			namedWindow("Original Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			//Draw image
 			imshow("Original Image", image);
-#endif
-		
-#if SHOW_CROPPED_IMAGE
+		}
+
+		if (showCroppedImage_)
+		{
 			namedWindow("Cropped Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			imshow("Cropped Image", pCroppedImage);
-
-#endif 
+		}
 
 			
-#if SHOW_UNDISTORTED_IMAGE
+		if (showUndistortedImage_)
+		{
 			namedWindow("Undistorted Image", WINDOW_NORMAL | CV_GUI_EXPANDED);
 			undistort(image, undistortedImage, camMatrix, distCoeffs);
 			imshow("Undistorted Image", undistortedImage);
-#endif	
+		}
 	toc();
 	}
 	inputVideo.release();
