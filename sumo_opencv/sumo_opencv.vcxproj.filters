@@ -21,9 +21,6 @@
     <ClCompile Include="serial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stitcher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="arucoFunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,9 +36,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="serial.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stitcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fileOutput.h">

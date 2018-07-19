@@ -6,7 +6,6 @@
 #include "detect.h"
 #include "fileOutput.h"
 #include "serial.h"
-#include "stitcher.h"
 
 /* OPENCV INCLUDES */
 #include "opencv2\opencv.hpp"
@@ -24,6 +23,9 @@ int readCameraParameters(string filename, Mat &camMatrix, Mat &distCoeffs);
 
 //Function to generate Aruco Codes
 int generateAruco();
+
+//Function to capture and save images that can be used for camera calibration
+int captureSaveCalibImages();
 
 //Function to calibrate Camera using Charuco Board
 int calibrateCamera();
