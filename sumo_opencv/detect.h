@@ -15,4 +15,4 @@ typedef enum recState_e
 	, REC
 } recState_t;
 
-int detectMarkers();
+int detectMarkers(char *serialComPort, const int firstDetectionFrames);

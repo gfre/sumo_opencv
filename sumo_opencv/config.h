@@ -1,24 +1,11 @@
 #pragma once 
 #include <Windows.h>
+#define CROPPED_IMAGE_SAFETY_ZONE 50
+#define EXPAND_WINDOW 5
+#define MOVING_AVG_SAMPLES 1
+#define CROPPED_IMAGE_SAFETY_ZONE 50
 
-	/* SERIAL SETUP*/
-#define SERIAL_COM_PORT						"COM4"					//Select COM port for serial transmission (with KF64 board which appears as "USB Serial Device" in Ports (COM&LPT))
 
-	/* ENABLE FEATURES */
-#define GENERATE_ARUCO_CODES				(0x01u)					//Generate and save Aruco Marker
-#define CALIBRATION_CAPTURE_SAVE_IMAGES		(0x02u)					//Take and save images for camera calibration
-#define CALIBRATION_CALIBRATE_CAMERA		(0x03u)					//Calibrate camera with saved images
-#define DETECT_MARKERS						(0x04u)					//Detect markers
-
-	/* SELECT PROGRAM MODE */
-#define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
-
-#define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
-#define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
-#define CROPPED_IMAGE_SAFETY_ZONE			(50)					//This value will be added to the cropped image [px]
-#define MOVING_AVG_SAMPLES					(1)						//Number of measurements used in moving average before data is send to COM port
-
-#define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected markers and coordinate system.
 #define SHOW_UNDISTORTED_IMAGE				(FALSE)					//Show the undistorted image 
 #define SHOW_CROPPED_IMAGE					(TRUE)					//Show the cropped image
 #define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
@@ -112,6 +99,7 @@ CV_CALIB_FIX_TAUX_TAUY	   sets taux and tauy to zero
 #define ERR_USER_ESCAPE						(0x09u)
 #define ERR_IMAGE_WRITE						(0x10u)
 #define ERR_IMAGE_READ						(0x11u)
+#define ERR_MODE							(0x12u)
 
 #define CHARUCO_ERR_NOT_ENOUGH_FRAMES		(5u)
 #define CHARUCO_ERR_NOT_ENOUGH_CORNERS		(6u)

@@ -39,7 +39,7 @@ void toc()
 
 
 
-int detectMarkers()
+int detectMarkers(char* serialComPort, const int firstDetectionFrames)
 {
 	int returnCode = ERR_OK;
 	string configFile = CALIB_FILE_NAME;
@@ -56,6 +56,7 @@ int detectMarkers()
 	float min_x = (float)FRAME_WIDTH, min_y = (float)FRAME_HEIGHT;
 	float max_x = 0.0, max_y = 0.0;
 	int newWidth, newHeight, newOrig_x = 0, newOrig_y = 0, newEnd_x, newEnd_y;
+
 
 
 	#if CSV_REMOVE_AT_START
@@ -120,7 +121,7 @@ int detectMarkers()
 	while (0 == maxNumOfSumos)
 	{
 		//This loop makes sure that maxNumSumos is the appropriate value
-		for (int sftyCnt = 0; sftyCnt <= NUM_FIRST_DETECTION_COUNTS; sftyCnt++)
+		for (int sftyCnt = 0; sftyCnt <= firstDetectionFrames; sftyCnt++)
 		{
 			if (inputVideo.read(image))
 			{
@@ -292,7 +293,7 @@ int detectMarkers()
 				composeSerialMessage(message, marker, phi);
 
 
-				sendSerial(SERIAL_COM_PORT, 255, message, sizeof(message) / sizeof(uint8_t));
+				sendSerial(serialComPort, 255, message, sizeof(message) / sizeof(uint8_t));
 
 			#endif
 
@@ -356,7 +357,7 @@ int detectMarkers()
 			uint16_t message = VAR_SWRESET;
 			currentMsg = "SW RESET";
 
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Go to IDLE application state by pressing 'i'
@@ -366,7 +367,7 @@ int detectMarkers()
 			uint16_t message = VAR_IDLE;
 			currentMsg = "IDLE";
 
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Go to normal application state by pressing 's'
@@ -376,7 +377,7 @@ int detectMarkers()
 			sendState = STATE_READY;
 			currentMsg = "READY";
 
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << endl;
 		}
 		//Start next Transition by pressing "g"
@@ -403,7 +404,7 @@ int detectMarkers()
 			currentMsg = "TRANSITION ";
 			currentMsg.append(s);
 
-			sendSerial(SERIAL_COM_PORT, 255, &message, sizeof(message) / sizeof(uint8_t));
+			sendSerial(serialComPort, 255, &message, sizeof(message) / sizeof(uint8_t));
 			cout << currentMsg << std::endl;
 		}
 
