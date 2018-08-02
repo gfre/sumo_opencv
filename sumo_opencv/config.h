@@ -56,7 +56,7 @@
 #define MAX_NUMBER_OF_MARKERS				(11u)										//How many markers/robots exist
 #define NUM_OF_VARIABLES					(3u)											//How many variables per robot (x, y, phi)
 #define MAX_MSG_LENGTH						( ((uint8_t)MAX_NUMBER_OF_MARKERS%4u) ? ((((uint8_t)MAX_NUMBER_OF_MARKERS / 4u)+1u)*4u)*(NUM_OF_VARIABLES) : ((MAX_NUMBER_OF_MARKERS)*(NUM_OF_VARIABLES)) )
-#define CALIB_FILE_NAME						"camera_parameters/calibration_basler_zero_tangent_zero_k3.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
+#define CALIB_FILE_NAME						"camera_parameters/1_k1k2_fix_fl_enabled.xml" //This is the file where opencv takes the distortion coefficients and the camera matrix from
 
 	/* Corner Refinement */
 #define CR_ENABLE							(true)
