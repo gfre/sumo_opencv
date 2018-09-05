@@ -24,8 +24,7 @@
 #define SHOW_FRAME_CENTER					(TRUE)					//Show principal point on image
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
-#define MANUAL_REC							(TRUE)					//Enable manual video recordings
-#define AUTO_REC							(FALSE)					//Automatically start video capture with transition
+#define RECORD_VIDEO						(TRUE)					//Enable video recording
 
 #define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File

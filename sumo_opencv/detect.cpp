@@ -47,6 +47,9 @@ int detectMarkers()
 	cv::Mat image, undistortedImage, pCroppedImage, camMatrix, invCamMatrix, distCoeffs;
 	Ptr<aruco::Dictionary> dictionary = aruco::getPredefinedDictionary(ARUCO_DICT);
 	VideoCapture inputVideo;
+#if RECORD_VIDEO
+	VideoWriter vidWriter;
+#endif
 	vector<int> markerIds;
 	vector<vector<Point2f>> origMarkerCorners, markerCorners ;
 	vector<Vec3d> rvecs, tvecs;
@@ -82,31 +85,6 @@ int detectMarkers()
 	inputVideo.open(0);
 	inputVideo.set(CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
 	inputVideo.set(CAP_PROP_FRAME_WIDTH,  FRAME_WIDTH);
-
-
-
-	#if (MANUAL_REC || AUTO_REC)
-		VideoWriter vidWriter;
-
-		int codec = CV_FOURCC('M', 'J', 'P', 'G');
-		double fps = (double)REC_FPS;
-		string vidFilename = "rec.avi";
-		Mat vidSizeImg;
-
-		//Save on image to get size
-		inputVideo >> vidSizeImg;
-
-		bool isColor = (vidSizeImg.type() == CV_8UC3);
-
-		vidWriter.open(vidFilename, codec, fps, vidSizeImg.size(), isColor);
-
-		if (!vidWriter.isOpened()) {
-			cerr << "Could not open the output video file for write\n";
-		}
-
-	#endif
-
-
 
 	// Corner detection parameters
 	const Ptr<aruco::DetectorParameters> &param = aruco::DetectorParameters::create();
@@ -165,17 +143,16 @@ int detectMarkers()
 		}
 	}
 		
-
 	//Grab frames continuously
 	while (inputVideo.read(image))
 	{
 		tic();
-		#if (MANUAL_REC || AUTO_REC)
-			if (recState == REC)
-			{
-				vidWriter.write(image);
-			}
-		#endif
+#if RECORD_VIDEO
+		if (recState == REC)
+		{
+			vidWriter.write(image);
+		}
+#endif
 		// Detect Marker corners in cropped image
 		aruco::detectMarkers(pCroppedImage, dictionary, markerCorners, markerIds, param);
 
@@ -384,11 +361,6 @@ int detectMarkers()
 		{
 			uint16_t message = VAR_TRANS;
 
-			if ((recState == NO_REC) && AUTO_REC)
-			{
-				recState = REC;
-				recMsg = "RECORDING...";
-			}
 			// If last state was also transition, increment transition counter, reset it otherwise
 			if ( ("IDLE" != currentMsg) && ("SW RESET" != currentMsg) && ("READY" != currentMsg) )
 			{
@@ -407,24 +379,37 @@ int detectMarkers()
 			cout << currentMsg << std::endl;
 		}
 
-		#if MANUAL_REC
-			//Record by pressing "w"
-			if ('W' == c || 'w' == c)
+#if RECORD_VIDEO
+		//Record by pressing "w"
+		if ('W' == c || 'w' == c)
+		{
+			if (recState == NO_REC)
 			{
-				if (recState == NO_REC)
-				{
-					recState = REC;
-					recMsg = "RECORDING...";
+				Mat vidSizeImg;
+				int codec = CV_FOURCC('M', 'J', 'P', 'G');
+				bool isColor = FALSE;
+
+				//Save on image to get size
+				inputVideo >> vidSizeImg;
+				isColor = (vidSizeImg.type() == CV_8UC3);
+				vidWriter.open("rec.avi", codec, (double)REC_FPS, vidSizeImg.size(), isColor);
+
+				if (!vidWriter.isOpened()) {
+					cerr << "Could not open the output video file for write\n";
 				}
-				else
-				{
-					recState = NO_REC;
-					recMsg = "";
-					vidWriter.release();
-					outputFile.close();
-				}
+
+				recState = REC;
+				recMsg = "RECORDING...";
 			}
-		#endif
+			else
+			{
+				recState = NO_REC;
+				recMsg = "";
+				vidWriter.release();
+				outputFile.close();
+			}
+		}
+#endif
 
 
 
