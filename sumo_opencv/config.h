@@ -25,6 +25,7 @@
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define RECORD_VIDEO						(TRUE)					//Enable video recording
+#define RECORD_FRAME_RATE_MS				(10000)					//Record frames every RECORD_FRAME_RATE_MS milli seconds
 
 #define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File

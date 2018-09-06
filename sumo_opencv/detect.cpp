@@ -20,8 +20,7 @@ std::stack<clock_t> tictoc_stack;
 String recMsg                = "";
 static sendState_t sendState = STATE_IDLE;
 static recState_t recState   = NO_REC;
-static clock_t elapsedTime   = 0;
-static clock_t startTime     = 0;
+static clock_t lastRecordedFrame = 0;
 static uint16_t message[MAX_MSG_LENGTH];
 
 
@@ -148,9 +147,10 @@ int detectMarkers()
 	{
 		tic();
 #if RECORD_VIDEO
-		if (recState == REC)
+		if ( (recState == REC) && (((double)(clock() - lastRecordedFrame))>=RECORD_FRAME_RATE_MS) )
 		{
 			vidWriter.write(image);
+			lastRecordedFrame = clock();
 		}
 #endif
 		// Detect Marker corners in cropped image
@@ -419,7 +419,7 @@ int detectMarkers()
 			putText(image, "Press 'i' to reset to IDLE application state",	Point(20, 70),   FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 			putText(image, "Press 's' to enter NORMAL application state",	Point(20, 110),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 			putText(image, "Press 'g' to start next Transition",			Point(20, 150),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
-			#if MANUAL_REC
+			#if RECORD_VIDEO
 				putText(image, "Press 'w' to start recording",					Point(20, 190),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 				putText(image, "Press 'e' to EXIT Program",						Point(20, 230),  FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
 				putText(image, "CURRENT STATE: ",								Point(400, 270), FONT_HERSHEY_SIMPLEX, 0.8, Scalar(255, 0, 0), 2);
