@@ -116,6 +116,7 @@ int detectMarkers()
 	//param->cornerRefinementMinAccuracy	= CR_MIN_ACCURACY;
 
 	int maxNumOfSumos = 0;
+	int flag = 0;
 	//Ensures that at least one sumo is detected before entering main loop
 	while (0 == maxNumOfSumos)
 	{
@@ -125,8 +126,13 @@ int detectMarkers()
 			if (inputVideo.read(image))
 			{
 				aruco::detectMarkers(image, dictionary, origMarkerCorners, markerIds, param);
-				if (markerIds.size() > 0)
+				for (int k = 0; k < markerIds.size(); k++)
 				{
+					flag |= markerIds[k] >= MAX_NUMBER_OF_MARKERS;
+				}
+				if (!flag)
+				{
+					
 					maxNumOfSumos = max(maxNumOfSumos, markerIds.size());
 				}
 			}
@@ -143,14 +149,17 @@ int detectMarkers()
 		if (markerIds.size() == maxNumOfSumos)
 		{
 			//Determine cropped image size
-			for (int k = 0; k < origMarkerCorners.size(); k++)
+			for (int k = 0; k < origMarkerCorners.size() && k < markerIds.size(); k++)
 			{
-				for (int l = 0; l < origMarkerCorners[k].size(); l++)
+				if (markerIds[k] < MAX_NUMBER_OF_MARKERS)
 				{
-					min_x = MIN(min_x, origMarkerCorners[k][l].x);
-					min_y = MIN(min_y, origMarkerCorners[k][l].y);
-					max_x = MAX(max_x, origMarkerCorners[k][l].x);
-					max_y = MAX(max_y, origMarkerCorners[k][l].y);
+					for (int l = 0; l < origMarkerCorners[k].size(); l++)
+					{
+						min_x = MIN(min_x, origMarkerCorners[k][l].x);
+						min_y = MIN(min_y, origMarkerCorners[k][l].y);
+						max_x = MAX(max_x, origMarkerCorners[k][l].x);
+						max_y = MAX(max_y, origMarkerCorners[k][l].y);
+					}
 				}
 			}
 			newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
@@ -183,11 +192,43 @@ int detectMarkers()
 		if (markerIds.size() > 0)
 		{
 			origMarkerCorners = markerCorners;
-			//if all sumos were detected, make image as small as possible
-			if (markerIds.size() == maxNumOfSumos)
+			// if not all sumos were detected, expand image in each frame
+			if (markerIds.size() < maxNumOfSumos)
 			{
 				//Update absolute position with relative values
 				for (int k = 0; k < markerIds.size(); k++) //k < maxNumSumos
+				{
+					for (int l = 0; l < markerCorners[k].size(); l++) // l < 4 (always)
+					{
+						origMarkerCorners[k][l].x = markerCorners[k][l].x + newOrig_x;
+						origMarkerCorners[k][l].y = markerCorners[k][l].y + newOrig_y;
+					}
+				}
+				aruco::drawDetectedMarkers(pCroppedImage, markerCorners, markerIds);
+
+				// Estimate poses from image
+				aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
+		
+				newOrig_x = MAX(newOrig_x - EXPAND_WINDOW, 0);
+				newOrig_y = MAX(newOrig_y - EXPAND_WINDOW, 0);
+				newEnd_x = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
+				newEnd_y = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
+				newWidth = newEnd_x - newOrig_x;
+				newHeight = newEnd_y - newOrig_y;
+				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
+			}
+			else
+			{	// if a new marker was added, update maxNumOfSumos
+				if (markerIds.size() > maxNumOfSumos)
+				{
+					maxNumOfSumos = MIN(markerIds.size(), MAX_NUMBER_OF_MARKERS);
+					std::cout << "Number of markers detected: " << markerIds.size() << std::endl;
+					std::cout << "Maximum number of detectable markers: " << maxNumOfSumos << std::endl;
+				}
+
+				//if all sumos were detected, make image as small as possible
+				//Update absolute position with relative values
+				for (int k = 0; k < markerCorners.size() && k < markerIds.size(); k++) //k < maxNumSumos
 				{
 					for (int l = 0; l < markerCorners[k].size(); l++) // l < 4 (always)
 					{
@@ -205,14 +246,17 @@ int detectMarkers()
 				max_x = 0.0;
 				max_y = 0.0;
 				//Determine cropped image size
-				for (int k = 0; k < origMarkerCorners.size(); k++)
+				for (int k = 0; k < origMarkerCorners.size() && k < markerIds.size(); k++)
 				{
-					for (int l = 0; l < origMarkerCorners[k].size(); l++)
+					if (markerIds[k] < MAX_NUMBER_OF_MARKERS)
 					{
-						min_x = MIN(min_x, origMarkerCorners[k][l].x);
-						min_y = MIN(min_y, origMarkerCorners[k][l].y);
-						max_x = MAX(max_x, origMarkerCorners[k][l].x);
-						max_y = MAX(max_y, origMarkerCorners[k][l].y);
+						for (int l = 0; l < origMarkerCorners[k].size(); l++)
+						{
+							min_x = MIN(min_x, origMarkerCorners[k][l].x);
+							min_y = MIN(min_y, origMarkerCorners[k][l].y);
+							max_x = MAX(max_x, origMarkerCorners[k][l].x);
+							max_y = MAX(max_y, origMarkerCorners[k][l].y);
+						}
 					}
 				}
 				newOrig_x = MAX(min_x - CROPPED_IMAGE_SAFETY_ZONE, 0);
@@ -224,59 +268,32 @@ int detectMarkers()
 
 				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
 			}
-			// if not all sumos were detected, expand image in each frame
-			else if (markerIds.size() < maxNumOfSumos)
-			{
-				//Update absolute position with relative values
-				for (int k = 0; k < markerIds.size(); k++) //k < maxNumSumos
-				{
-					for (int l = 0; l < markerCorners[k].size(); l++) // l < 4 (always)
-					{
-						origMarkerCorners[k][l].x = markerCorners[k][l].x + newOrig_x;
-						origMarkerCorners[k][l].y = markerCorners[k][l].y + newOrig_y;
-					}
-				}
-				aruco::drawDetectedMarkers(pCroppedImage, markerCorners, markerIds);
-
-				// Estimate poses from image
-				aruco::estimatePoseSingleMarkers(origMarkerCorners, MARKER_LENGTH, camMatrix, distCoeffs, rvecs, tvecs);
-
-				newOrig_x = MAX(newOrig_x - EXPAND_WINDOW, 0);
-				newOrig_y = MAX(newOrig_y - EXPAND_WINDOW, 0);
-				newEnd_x  = MIN(newEnd_x + EXPAND_WINDOW, FRAME_WIDTH);
-				newEnd_y  = MIN(newEnd_y + EXPAND_WINDOW, FRAME_HEIGHT);
-				newWidth  = newEnd_x - newOrig_x;
-				newHeight = newEnd_y - newOrig_y;
-				pCroppedImage = image(Rect(newOrig_x, newOrig_y, newWidth, newHeight));
-			}
-			// if a new marker was added, update maxNumOfSumos
-			else
-			{
-				maxNumOfSumos = MIN(markerIds.size(), MAX_NUMBER_OF_MARKERS);
-				std::cout << "Maximum number of detectable markers: " << maxNumOfSumos << std::endl;
-			}
+			
 
 			for (size_t i = 0; i < markerIds.size(); i++)
 			{
-				cv::Mat t, rotMatrix;
+				if (markerIds[i] < MAX_NUMBER_OF_MARKERS)
+				{
+					cv::Mat t, rotMatrix;
 
-				// Compose rotation matrix from rotation vector
-				Rodrigues(rvecs[i], rotMatrix);
-				#if PRINT_ROT_MATRIX
+					// Compose rotation matrix from rotation vector
+					Rodrigues(rvecs[i], rotMatrix);
+#if PRINT_ROT_MATRIX
 					cout << "Rot Matrix: " << rotMatrix << endl;
-				#endif
+#endif
 
-				//Draw axes of detected marker
-				cv::aruco::drawAxis(image, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
+					//Draw axes of detected marker
+					cv::aruco::drawAxis(image, camMatrix, distCoeffs, rvecs[i], tvecs[i], MARKER_LENGTH * 0.5f);
 
-				//Copy translation vector tvec to cv::Mat object t
-				t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
-				t.at<double>(0, 0) = tvecs[i][0];
-				t.at<double>(1, 0) = tvecs[i][1];
-				t.at<double>(2, 0) = tvecs[i][2];
+					//Copy translation vector tvec to cv::Mat object t
+					t = cv::Mat::ones(3, 1, cv::DataType<double>::type);
+					t.at<double>(0, 0) = tvecs[i][0];
+					t.at<double>(1, 0) = tvecs[i][1];
+					t.at<double>(2, 0) = tvecs[i][2];
 
-				phi[markerIds[i]]    = atan2(rotMatrix.at<double>(0, 1), -rotMatrix.at<double>(0, 0));
-				marker[markerIds[i]] = t;
+					phi[markerIds[i]] = atan2(rotMatrix.at<double>(0, 1), -rotMatrix.at<double>(0, 0));
+					marker[markerIds[i]] = t;
+				}
 			}
 
 			#if PRINT_WORLD_COORDS

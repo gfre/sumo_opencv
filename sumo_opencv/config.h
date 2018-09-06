@@ -14,8 +14,8 @@
 #define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
-#define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
-#define CROPPED_IMAGE_SAFETY_ZONE			(50)					//This value will be added to the cropped image [px]
+#define EXPAND_WINDOW						(50)					//When not all sumos are detected the cropped window is widened by this amount [px/s]
+#define CROPPED_IMAGE_SAFETY_ZONE			(75)					//This value will be added to the cropped image [px]
 #define MOVING_AVG_SAMPLES					(1)						//Number of measurements used in moving average before data is send to COM port
 
 #define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected markers and coordinate system.
