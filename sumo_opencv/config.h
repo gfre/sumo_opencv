@@ -14,8 +14,8 @@
 #define SUMO_OPENCV_MODE                    (DETECT_MARKERS)
 
 #define NUM_FIRST_DETECTION_COUNTS			(50)					//Number of scancs through first image to make sure camera detects all markers in image
-#define EXPAND_WINDOW						(5)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
-#define CROPPED_IMAGE_SAFETY_ZONE			(50)					//This value will be added to the cropped image [px]
+#define EXPAND_WINDOW						(15)						//When not all sumos are detected the cropped window is widened by this amount [px/s]
+#define CROPPED_IMAGE_SAFETY_ZONE			(100)					//This value will be added to the cropped image [px]
 #define MOVING_AVG_SAMPLES					(1)						//Number of measurements used in moving average before data is send to COM port
 
 #define SHOW_ORIGINAL_IMAGE					(TRUE)					//Show the originally captured image with detected markers and coordinate system.
@@ -25,7 +25,7 @@
 #define SHOW_FRAME_COORD_SYS				(TRUE)					//Show xy-coordinate system on image
 
 #define RECORD_VIDEO						(TRUE)					//Enable video recording
-#define RECORD_FRAME_RATE_MS				(10000)					//Record frames every RECORD_FRAME_RATE_MS milli seconds
+#define RECORD_FRAME_RATE_MS				(20)					//Record frames every RECORD_FRAME_RATE_MS milli seconds
 
 #define PRINT_WORLD_COORDS					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to Command line 	
 #define PRINT_COORDS_TO_CSV					(FALSE)					//Print 3D World Coordinates (X,Y,Z) to CSV File
@@ -48,7 +48,7 @@
 #define FRAME_WIDTH							(2592)					//Camera image width
 #define FRAME_HEIGHT						(2048)					//Camera image height
 #define MS_BETWEEN_FRAMES					(1)						// 0 will freeze the program until key is pressed. The larger this value, the slower the data transmission 
-#define REC_FPS								(2.5)
+#define REC_FPS								(20)
 
 	/* ARUCO SETUP */
 #define ARUCO_DICT							(aruco::DICT_4X4_50)						//select the predefined Aruco dictionary
